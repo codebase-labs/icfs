@@ -1,12 +1,20 @@
 mod stable;
 
-use stable::{StableReader, StableWriter, StableSeeker};
+use stable::{StableReader, StableSeeker, StableWriter};
 
 #[derive(Default)]
 pub struct StableMemory {
     reader: StableReader,
     writer: StableWriter,
     seeker: StableSeeker,
+}
+
+impl StableMemory {
+    pub fn grow(&mut self, added_pages: u64) -> std::io::Result<()> {
+        self.writer.grow(added_pages).map_err(|_| {
+            std::io::Error::new(std::io::ErrorKind::Other, "Unable to grow stable memory")
+        })
+    }
 }
 
 impl std::io::Read for StableMemory {

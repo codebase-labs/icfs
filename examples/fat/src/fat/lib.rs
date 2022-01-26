@@ -12,12 +12,13 @@ fn init() {
 }
 
 fn _init() -> Result<(), std::io::Error> {
-    ic_cdk::api::stable::stable64_grow(1024 * 128).map_err(|_| {
-        std::io::Error::new(std::io::ErrorKind::Other, "Unable to grow stable memory")
-    })?;
-
     // TODO: FS.with(|fs| )
-    let fs = icfs::StableMemory::default();
+    let mut fs = icfs::StableMemory::default();
+
+    // A Wasm memory page is 2^16 bytes. Canisters have a 4 Gigabyte limit. 4 GB
+    // is 2^16 * 2^16 bytes. Apparently we can grow beyone that to 2^17 pages.
+    fs.grow(2^17)?;
+
     let fs = fscommon::BufStream::new(fs);
 
     fatfs::format_volume(
