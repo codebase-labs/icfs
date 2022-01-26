@@ -4,24 +4,6 @@
 use ic_cdk::api::stable::{stable64_grow, stable64_read, stable64_size, stable64_write, StableMemoryError};
 use std::io;
 
-/// Attempts to grow the memory by adding new pages.
-/// Returns the new capacity, if successful.
-fn grow(added_pages: u64) -> Result<u64, StableMemoryError> {
-    let old_page_count = stable64_grow(added_pages)?;
-    let capacity = old_page_count + added_pages;
-    Ok(capacity)
-}
-
-/// Attempts to grow the memory by adding new pages if necessary.
-/// Returns the new capacity, if successful.
-fn grow_if_necessary(offset: usize, capacity: u64, buffer_length: usize) -> Result<u64, StableMemoryError> {
-    if offset + buffer_length > ((capacity as usize) << 16) {
-        grow((buffer_length >> 16) as u64 + 1)
-    } else {
-        Ok(capacity)
-    }
-}
-
 /// A writer to the stable memory.
 ///
 /// Will attempt to grow the memory as it writes,
@@ -46,12 +28,22 @@ impl Default for StableWriter {
 }
 
 impl StableWriter {
+    /// Attempts to grow the memory by adding new pages.
+    pub fn grow(&mut self, added_pages: u64) -> Result<(), StableMemoryError> {
+        let old_page_count = stable64_grow(added_pages)?;
+        self.capacity = old_page_count + added_pages;
+        Ok(())
+    }
+
     /// Writes a byte slice to the buffer.
     ///
     /// The only condition where this will
     /// error out is if it cannot grow the memory.
     pub fn write(&mut self, buf: &[u8]) -> Result<usize, StableMemoryError> {
-        self.capacity = grow_if_necessary(self.offset, self.capacity, buf.len())?;
+        if self.offset + buf.len() > ((self.capacity as usize) << 16) {
+            self.grow((buf.len() >> 16) as u64 + 1)?;
+        }
+
         stable64_write(self.offset as u64, buf);
         self.offset += buf.len();
         Ok(buf.len())
