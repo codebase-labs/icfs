@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "dfx": "0.8.4",
+  "canisters": {
+    "fat": {
+      "type": "rust",
+      "package": "fat",
+      "candid": "src/fat/fat.did"
+    }
+  },
+  "networks": {
+    "local": {
+      "bind": "127.0.0.1:8000",
+      "type": "ephemeral"
+    }
+  }
+}
