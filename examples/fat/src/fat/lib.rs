@@ -16,7 +16,7 @@ fn _init() -> Result<(), std::io::Error> {
     let mut fs = icfs::StableMemory::default();
 
     // A Wasm memory page is 2^16 bytes. Canisters have a 4 Gigabyte limit. 4 GB
-    // is 2^16 * 2^16 bytes. Apparently we can grow beyone that to 2^17 pages.
+    // is 2^16 * 2^16 bytes. Apparently we can grow beyond that to 2^17 pages.
     fs.grow(2^17)?;
 
     let fs = fscommon::BufStream::new(fs);
