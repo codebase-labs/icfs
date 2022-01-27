@@ -123,7 +123,7 @@ impl StableSeeker {
             io::SeekFrom::End(end) => {
                 let capacity = stable64_size();
                 if capacity as i64 + end >= 0 {
-                    self.offset += end as usize;
+                    self.offset = ((capacity as usize) << 16) + (end as usize);
                     Ok(self.offset as u64)
                 } else {
                     Err(StableMemoryError {})
