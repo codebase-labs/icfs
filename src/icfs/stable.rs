@@ -82,7 +82,7 @@ impl StableReader {
     pub fn read(&mut self, buf: &mut [u8]) -> Result<usize, StableMemoryError> {
         let capacity = stable64_size();
         // Aim to address https://github.com/dfinity/cdk-rs/issues/78
-        if capacity < buf.len() as u64 {
+        if ((capacity as usize) << 16) < buf.len() {
             Err(StableMemoryError())
         } else {
             stable64_read(self.offset as u64, buf);
