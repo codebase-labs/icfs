@@ -54,3 +54,31 @@ fn _write_hello(_name: String) -> std::io::Result<()> {
     // file.write_all(&contents)?;
     Ok(())
 }
+
+//
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct InternetComputerTimeProvider {
+    _dummy: (),
+}
+
+impl InternetComputerTimeProvider {
+    #[must_use]
+    pub fn new() -> Self {
+        Self { _dummy: () }
+    }
+}
+
+impl fatfs::TimeProvider for InternetComputerTimeProvider {
+    fn get_current_date(&self) -> fatfs::Date {
+        // ic_cdk::api::time()
+        // fatfs::Date::from()
+        // fatfs::Date::decode(_)
+    }
+
+    fn get_current_date_time(&self) -> fatfs::DateTime {
+        // ic_cdk::api::time()
+        // fatfs::DateTime::decode(_, _, _)
+        // fatfs::DateTime::from(_)
+    }
+}
