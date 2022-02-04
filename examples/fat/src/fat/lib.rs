@@ -20,7 +20,8 @@ fn _init() -> Result<(), std::io::Error> {
     stable_memory.grow(2^17)?;
     // TODO: stable_memory.grow(core::arch::wasm32::memory_size(0))?;
 
-    let stable_memory = fscommon::BufStream::new(stable_memory);
+    // TODO:
+    // let stable_memory = fscommon::BufStream::new(stable_memory);
 
     fatfs::format_volume(
         &mut fatfs::StdIoWrapper::from(stable_memory),
