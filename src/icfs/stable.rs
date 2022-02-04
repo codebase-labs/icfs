@@ -8,6 +8,7 @@ use std::io;
 ///
 /// Will attempt to grow the memory as it writes,
 /// and keep offsets and total capacity.
+#[derive(Copy, Clone)]
 pub struct StableWriter {
     /// The offset of the next write.
     offset: usize,
@@ -66,6 +67,7 @@ impl io::Write for StableWriter {
 /// A reader to the stable memory.
 ///
 /// Keeps an offset and reads off stable memory consecutively.
+#[derive(Copy, Clone)]
 pub struct StableReader {
     /// The offset of the next read.
     offset: usize,
@@ -103,6 +105,7 @@ impl io::Read for StableReader {
 /// A seeker to the stable memory.
 ///
 /// Keeps an offset.
+#[derive(Copy, Clone)]
 pub struct StableSeeker {
     offset: usize,
 }

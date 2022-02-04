@@ -3,7 +3,7 @@ mod stable;
 use ic_cdk::api::stable::stable64_size;
 use stable::{StableReader, StableSeeker, StableWriter};
 
-#[derive(Default)]
+#[derive(Copy, Clone, Default)]
 pub struct StableMemory {
     reader: StableReader,
     writer: StableWriter,
