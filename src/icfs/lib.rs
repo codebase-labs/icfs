@@ -1,5 +1,6 @@
 mod stable;
 
+use ic_cdk::api::stable::stable64_size;
 use stable::{StableReader, StableSeeker, StableWriter};
 
 #[derive(Default)]
@@ -14,6 +15,10 @@ impl StableMemory {
         self.writer.grow(added_pages).map_err(|_| {
             std::io::Error::new(std::io::ErrorKind::Other, "Unable to grow stable memory")
         })
+    }
+
+    pub fn size() -> u64 {
+        stable64_size()
     }
 }
 
