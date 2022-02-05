@@ -18,7 +18,7 @@ fn _init() -> Result<(), std::io::Error> {
 
     // A Wasm memory page is 2^16 bytes. Canisters have a 4 Gigabyte limit. 4 GB
     // is 2^16 * 2^16 bytes. Apparently we can grow beyond that to 2^17 pages.
-    stable_memory.grow(2^17)?;
+    stable_memory.grow(2 ^ 17)?;
     // TODO: stable_memory.grow(core::arch::wasm32::memory_size(0))?;
 
     // TODO:
