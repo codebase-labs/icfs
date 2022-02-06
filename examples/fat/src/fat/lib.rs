@@ -1,48 +1,92 @@
-use ic_cdk_macros::{init, update};
+use ic_cdk_macros::{query, update};
 use std::convert::TryInto;
-use std::io::Write;
+use std::io::{Read, Write};
+
+// type FileSystem = fatfs::FileSystem<
+//     fatfs::StdIoWrapper<fscommon::BufStream<icfs::StableMemory>>,
+//     InternetComputerTimeProvider,
+//     fatfs::LossyOemCpConverter,
+// >;
+type FileSystem = fatfs::FileSystem<
+    fatfs::StdIoWrapper<icfs::StableMemory>,
+    InternetComputerTimeProvider,
+    fatfs::LossyOemCpConverter,
+>;
 
 thread_local! {
-    static FS: std::cell::RefCell<fscommon::BufStream<icfs::StableMemory>>
-        = std::cell::RefCell::new(fscommon::BufStream::new(icfs::StableMemory::default()));
+    // static STABLE_MEMORY: std::cell::RefCell<fscommon::BufStream<icfs::StableMemory>>
+    //     = std::cell::RefCell::new(fscommon::BufStream::new(icfs::StableMemory::default()));
+    static STABLE_MEMORY: std::cell::RefCell<icfs::StableMemory>
+        = std::cell::RefCell::new(icfs::StableMemory::default());
+
+    static FS: std::cell::RefCell<FileSystem> = {
+        let fs: std::io::Result<FileSystem> = STABLE_MEMORY.with(|stable_memory| {
+            let mut stable_memory = *stable_memory.borrow();
+
+            // A Wasm memory page is 2^16 bytes. Canisters have a 4 Gigabyte limit.
+            // 4 GB is 2^16 * 2^16 bytes. Apparently we can grow beyond that to 2^17
+            // pages.
+            stable_memory.grow(2 ^ 17)?;
+            // TODO: stable_memory.grow(core::arch::wasm32::memory_size(0))?;
+
+            // TODO:
+            // let stable_memory = fscommon::BufStream::new(stable_memory);
+
+            fatfs::format_volume(
+                &mut fatfs::StdIoWrapper::from(stable_memory),
+                fatfs::FormatVolumeOptions::new(),
+            )?;
+
+            let options = fatfs::FsOptions::new()
+                .time_provider(InternetComputerTimeProvider::new())
+                .update_accessed_date(true);
+
+            let fs = fatfs::FileSystem::new(stable_memory, options)?;
+
+            Ok(fs)
+        });
+
+        std::cell::RefCell::new(fs.unwrap())
+    };
 }
 
-#[init]
-fn init() {
-    _init().unwrap();
+#[query]
+fn ls() -> String {
+    _ls().unwrap()
 }
 
-fn _init() -> Result<(), std::io::Error> {
-    // TODO: FS.with(|fs| )
-    let mut stable_memory = icfs::StableMemory::default();
+fn _ls() -> std::io::Result<String> {
+    FS.with(|fs| {
+        let fs = fs.borrow();
+        let root_dir = fs.root_dir();
+        let entries: std::io::Result<Vec<String>> = root_dir
+            .iter()
+            .map(|entry| {
+                entry
+                    .map(|e| e.file_name())
+                    .map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error))
+            })
+            .collect();
+        entries.map(|entries| entries.join("\n"))
+    })
+}
 
-    // A Wasm memory page is 2^16 bytes. Canisters have a 4 Gigabyte limit. 4 GB
-    // is 2^16 * 2^16 bytes. Apparently we can grow beyond that to 2^17 pages.
-    stable_memory.grow(2 ^ 17)?;
-    // TODO: stable_memory.grow(core::arch::wasm32::memory_size(0))?;
+#[query]
+fn read_hello() -> String {
+    _read_hello().unwrap()
+}
 
-    // TODO:
-    // let stable_memory = fscommon::BufStream::new(stable_memory);
-
-    fatfs::format_volume(
-        &mut fatfs::StdIoWrapper::from(stable_memory),
-        fatfs::FormatVolumeOptions::new(),
-    )
-    .map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error))?;
-
-    // TEMP
-    let options = fatfs::FsOptions::new()
-        .time_provider(InternetComputerTimeProvider::new())
-        .update_accessed_date(true);
-    let fs = fatfs::FileSystem::new(stable_memory, options)?;
-
-    let name = "World";
-
-    let root_dir = fs.root_dir();
-    let mut file = root_dir.create_file("hello.txt")?;
-    let contents = format!("Hello, {}!", name).into_bytes();
-    file.write_all(&contents)?;
-    Ok(())
+fn _read_hello() -> std::io::Result<String> {
+    FS.with(|fs| {
+        let fs = fs.borrow();
+        let root_dir = fs.root_dir();
+        let mut file = root_dir.open_file("hello.txt")?;
+        let mut buf = vec![];
+        file.read_to_end(&mut buf)?;
+        let contents = String::from_utf8(buf)
+            .map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error))?;
+        Ok(contents)
+    })
 }
 
 #[update]
@@ -50,12 +94,15 @@ fn write_hello(name: String) {
     _write_hello(name).unwrap();
 }
 
-fn _write_hello(_name: String) -> std::io::Result<()> {
-    // let root_dir = fs.root_dir();
-    // let mut file = root_dir.create_file("hello.txt")?;
-    // let contents = format!("Hello, {}!", name).into_bytes();
-    // file.write_all(&contents)?;
-    Ok(())
+fn _write_hello(name: String) -> std::io::Result<()> {
+    FS.with(|fs| {
+        let fs = fs.borrow();
+        let root_dir = fs.root_dir();
+        let mut file = root_dir.create_file("hello.txt")?;
+        let contents = format!("Hello, {}!", name).into_bytes();
+        file.write_all(&contents)?;
+        Ok(())
+    })
 }
 
 //
