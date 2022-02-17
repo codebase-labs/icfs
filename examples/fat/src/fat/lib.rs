@@ -1,4 +1,4 @@
-use ic_cdk_macros::{query, update};
+use ic_cdk_macros::{init, query, update};
 use std::convert::TryInto;
 use std::io::{Read, Write};
 
@@ -48,6 +48,71 @@ thread_local! {
 
         std::cell::RefCell::new(fs.unwrap())
     };
+}
+
+#[init]
+fn init() {
+    ic_cdk::print("init");
+
+    #[cfg(target_arch = "wasm32")]
+    _init().unwrap()
+}
+
+#[cfg(target_arch = "wasm32")]
+fn _init() -> std::io::Result<()> {
+    // FIXME: debugging file not found
+    let mut stable_memory = icfs::StableMemory::default();
+
+    let memory_pages = core::arch::wasm32::memory_size(0)
+        .try_into()
+        .map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error))?;
+
+    stable_memory.grow(memory_pages)?;
+
+    // TODO:
+    // let stable_memory = fscommon::BufStream::new(stable_memory);
+
+    fatfs::format_volume(
+        &mut fatfs::StdIoWrapper::from(stable_memory),
+        fatfs::FormatVolumeOptions::new(),
+    )?;
+
+    let options = fatfs::FsOptions::new()
+        .time_provider(InternetComputerTimeProvider::new())
+        .update_accessed_date(true);
+
+    let fs = fatfs::FileSystem::new(stable_memory, options)?;
+
+    // FS.with(|fs| {
+    // let fs = fs.borrow();
+    let filename = "hello.txt";
+    let name = "World!";
+    //
+    let root_dir = fs.root_dir();
+    let mut file = root_dir.create_file(filename)?;
+    let contents = format!("Hello, {}!", name).into_bytes();
+    file.write_all(&contents)?;
+    //
+    let entries: std::io::Result<Vec<String>> = root_dir
+        .iter()
+        .map(|entry| {
+            entry
+                .map(|e| e.file_name())
+                .map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error))
+        })
+        .collect();
+    let entries = entries.map(|entries| entries.join("\n"))?;
+    ic_cdk::print(format!("entries: {}", entries));
+    //
+    let mut file = root_dir.open_file(filename)?;
+    let mut buf = vec![];
+    file.read_to_end(&mut buf)?;
+    let contents = String::from_utf8(buf)
+        .map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error))?;
+    ic_cdk::print(format!("contents: {}", contents));
+    //
+    Ok(())
+    // })
 }
 
 #[query]
