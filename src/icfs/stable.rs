@@ -1,7 +1,8 @@
-// * Based on https://github.com/dfinity/cdk-rs/blob/6c0aa52bc070c4d31a2ca571799f8a11ceb2d6de/src/ic-cdk/src/api/stable.rs
+// Based on https://github.com/dfinity/cdk-rs/blob/a253119adb08929b6304d007ee0a6a37960656ed/src/ic-cdk/src/api/stable.rs
 // * Supports 64-bit addressed memory
-// * Aims to prevent out-of-bounds reads
-use ic_cdk::api::stable::{stable64_grow, stable64_read, stable64_size, stable64_write, StableMemoryError};
+use ic_cdk::api::stable::{
+    stable64_grow, stable64_read, stable64_size, stable64_write, StableMemoryError,
+};
 use std::io;
 
 /// A writer to the stable memory.
@@ -54,7 +55,7 @@ impl StableWriter {
 impl io::Write for StableWriter {
     fn write(&mut self, buf: &[u8]) -> Result<usize, io::Error> {
         self.write(buf)
-            .map_err(|_| io::Error::new(io::ErrorKind::Other, "Out Of Memory"))
+            .map_err(|e| io::Error::new(io::ErrorKind::OutOfMemory, e))
     }
 
     fn flush(&mut self) -> Result<(), io::Error> {
@@ -62,7 +63,6 @@ impl io::Write for StableWriter {
         Ok(())
     }
 }
-
 
 /// A reader to the stable memory.
 ///
@@ -82,25 +82,29 @@ impl Default for StableReader {
 impl StableReader {
     /// Reads data from the stable memory location specified by an offset.
     pub fn read(&mut self, buf: &mut [u8]) -> Result<usize, StableMemoryError> {
-        let capacity = stable64_size();
-        // Aim to address https://github.com/dfinity/cdk-rs/issues/78
-        if ((capacity as usize) << 16) < buf.len() {
-            Err(StableMemoryError())
+        let capacity = (stable64_size() as usize) << 16;
+        let read_buf = if buf.len() + self.offset > capacity {
+            if self.offset < capacity {
+                &mut buf[..capacity - self.offset]
+            } else {
+                return Err(StableMemoryError::OutOfBounds);
+            }
         } else {
-            stable64_read(self.offset as u64, buf);
-            self.offset += buf.len();
-            Ok(buf.len())
-        }
+            buf
+        };
+        stable64_read(self.offset as u64, read_buf);
+        self.offset += read_buf.len();
+        Ok(read_buf.len())
     }
 }
 
 impl io::Read for StableReader {
     fn read(&mut self, buf: &mut [u8]) -> Result<usize, io::Error> {
+        // self.read(buf).or(Ok(0)) // Read defines EOF to be success
         self.read(buf)
-            .map_err(|_| io::Error::new(io::ErrorKind::Other, "Attempt to read beyond available memory"))
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
     }
 }
-
 
 /// A seeker to the stable memory.
 ///
@@ -129,7 +133,7 @@ impl StableSeeker {
                     self.offset = ((capacity as usize) << 16) + (end as usize);
                     Ok(self.offset as u64)
                 } else {
-                    Err(StableMemoryError {})
+                    Err(StableMemoryError::OutOfBounds)
                 }
             }
             io::SeekFrom::Current(current) => {
@@ -137,7 +141,7 @@ impl StableSeeker {
                     self.offset += current as usize;
                     Ok(self.offset as u64)
                 } else {
-                    Err(StableMemoryError {})
+                    Err(StableMemoryError::OutOfBounds)
                 }
             }
         }
