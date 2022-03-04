@@ -64,10 +64,7 @@
 
         dfinitySdk = (pkgs.dfinity-sdk {
           acceptLicenseAgreement = true;
-          sdkSystem =
-            if system == "aarch64-darwin"
-            then "x86_64-darwin"
-            else system;
+          sdkSystem = system;
         })."0.8.4";
       in
         rec {
