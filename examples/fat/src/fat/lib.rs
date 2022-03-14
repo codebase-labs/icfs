@@ -68,10 +68,10 @@ fn init() {
     ic_cdk::print("init");
 
     // TEMP
-    check_ic_cdk_stable_memory_api();
+    // check_ic_cdk_stable_memory_api();
 
     // TEMP
-    check_icfs_stable_memory_api();
+    // check_icfs_stable_memory_api();
 
     #[cfg(target_arch = "wasm32")]
     _init().unwrap()
