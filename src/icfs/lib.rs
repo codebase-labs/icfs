@@ -1,6 +1,6 @@
 mod stable;
 
-use ic_cdk::api::stable::stable64_size;
+use ic_cdk::api::stable::{stable64_read, stable64_size};
 use stable::{StableReader, StableSeeker, StableWriter};
 
 #[derive(Copy, Clone, Default)]
@@ -11,6 +11,18 @@ pub struct StableMemory {
 }
 
 impl StableMemory {
+    pub fn bytes() -> Vec<u8> {
+        let size = (stable64_size() as usize) << 16;
+        let mut vec = Vec::with_capacity(size);
+        unsafe {
+            vec.set_len(size);
+        }
+
+        stable64_read(0, vec.as_mut_slice());
+
+        vec
+    }
+
     pub fn grow(&mut self, added_pages: u64) -> std::io::Result<()> {
         self.writer.grow(added_pages).map_err(|_| {
             std::io::Error::new(std::io::ErrorKind::Other, "Unable to grow stable memory")
