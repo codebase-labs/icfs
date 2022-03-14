@@ -2,6 +2,19 @@ use ic_cdk_macros::{init, query, update};
 use std::convert::TryInto;
 use std::io::{Read, Write};
 
+// TEMP
+fn stable64_bytes() -> Vec<u8> {
+    let size = (ic_cdk::api::stable::stable64_size() as usize) << 16;
+    let mut vec = Vec::with_capacity(size);
+    unsafe {
+        vec.set_len(size);
+    }
+
+    ic_cdk::api::stable::stable64_read(0, vec.as_mut_slice());
+
+    vec
+}
+
 // type FileSystem = fatfs::FileSystem<
 //     fatfs::StdIoWrapper<fscommon::BufStream<icfs::StableMemory>>,
 //     InternetComputerTimeProvider,
@@ -54,8 +67,52 @@ thread_local! {
 fn init() {
     ic_cdk::print("init");
 
+    // TEMP
+    check_ic_cdk_stable_memory_api();
+
+    // TEMP
+    check_icfs_stable_memory_api();
+
     #[cfg(target_arch = "wasm32")]
     _init().unwrap()
+}
+
+fn check_ic_cdk_stable_memory_api() {
+    let size = ic_cdk::api::stable::stable64_size();
+    ic_cdk::print(format!("size: {:#?}", size));
+
+    ic_cdk::api::stable::stable64_grow(1)
+        .map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Unable to grow stable memory"))
+        .unwrap();
+
+    let size = ic_cdk::api::stable::stable64_size();
+    ic_cdk::print(format!("size: {:#?}", size));
+
+    let write_buf = [1, 2, 3];
+    ic_cdk::print(format!("write_buf: {:#?}", write_buf));
+    ic_cdk::api::stable::stable64_write(0, &write_buf);
+
+    let mut read_buf = vec![0; write_buf.len()];
+    ic_cdk::api::stable::stable64_read(0, &mut read_buf);
+    ic_cdk::print(format!("read_buf: {:#?}", read_buf));
+
+    let bytes = stable64_bytes();
+    ic_cdk::print(format!("bytes: {:#?}", bytes[0..3].to_vec())); // Prints [1, 2, 3]
+}
+
+fn check_icfs_stable_memory_api() {
+    let mut stable_memory = icfs::StableMemory::default();
+
+    let write_buf = [1, 2, 3];
+    ic_cdk::print(format!("write_buf: {:#?}", write_buf));
+    stable_memory.write(&write_buf).expect("stable_memory.write");
+
+    let bytes = icfs::StableMemory::bytes();
+    ic_cdk::print(format!("bytes: {:#?}", bytes[0..3].to_vec()));
+
+    let mut read_buf = vec![0; write_buf.len()];
+    stable_memory.read(&mut read_buf).expect("stable_memory.read");
+    ic_cdk::print(format!("read_buf: {:#?}", read_buf)); // Prints [1, 2, 3]
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -101,11 +158,11 @@ fn _init() -> std::io::Result<()> {
                 .map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error))
         })
         .collect();
-    let entries = entries.map(|entries| entries.join("\n"))?;
+    let entries = entries.map(|entries| entries.join("\n"))?; // FIXME: entries is empty
     ic_cdk::print(format!("entries: {}", entries));
     //
-    let mut file = root_dir.open_file(filename)?;
-    let mut buf = vec![];
+    let mut file = root_dir.open_file(filename)?; // FIXME: this fails with NotFound
+    let mut buf = vec![0; contents.len()];
     file.read_to_end(&mut buf)?;
     let contents = String::from_utf8(buf)
         .map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error))?;
