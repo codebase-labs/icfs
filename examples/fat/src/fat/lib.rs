@@ -1,6 +1,6 @@
 use ic_cdk_macros::{init, query, update};
 use std::convert::TryInto;
-use std::io::{Read, Write};
+use std::io::{Read, Seek, Write};
 
 // TEMP
 fn stable64_bytes() -> Vec<u8> {
@@ -112,6 +112,8 @@ fn check_icfs_stable_memory_api() {
 
     let bytes = icfs::bytes();
     ic_cdk::print(format!("bytes: {:#?}", bytes[0..3].to_vec()));
+
+    stable_memory.seek(std::io::SeekFrom::Start(0)).unwrap();
 
     let mut read_buf = vec![0; write_buf.len()];
     stable_memory.read(&mut read_buf).expect("stable_memory.read");
