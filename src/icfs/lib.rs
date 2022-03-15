@@ -86,7 +86,7 @@ fn seek(stable_memory: &mut StableMemory, pos: io::SeekFrom) -> Result<u64, Stab
 /// The only condition where this will
 /// error out is if it cannot grow the memory.
 pub fn write(stable_memory: &mut StableMemory, buf: &[u8]) -> Result<usize, StableMemoryError> {
-    if stable_memory.offset + buf.len() > ((size() as usize) << 16) {
+    if stable_memory.offset + buf.len() > capacity() {
         grow((buf.len() >> 16) as u64 + 1)?;
     }
     stable64_write(stable_memory.offset as u64, buf);
