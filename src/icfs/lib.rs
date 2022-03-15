@@ -14,13 +14,18 @@ pub struct StableMemory {
 ///
 /// This will map the whole memory (even if not all of it has been written to).
 pub fn bytes() -> Vec<u8> {
-    let size = (size() as usize) << 16;
-    let mut vec = Vec::with_capacity(size);
+    let capacity = capacity();
+    let mut vec = Vec::with_capacity(capacity);
     unsafe {
-        vec.set_len(size);
+        vec.set_len(capacity);
     }
     stable64_read(0, vec.as_mut_slice());
     vec
+}
+
+/// Gets capacity of the stable memory in bytes.
+pub fn capacity() -> usize {
+    (size() as usize) << 16
 }
 
 /// Attempts to grow the memory by adding new pages.
@@ -28,14 +33,14 @@ pub fn grow(added_pages: u64) -> Result<u64, StableMemoryError> {
     stable64_grow(added_pages)
 }
 
-/// Gets current size of the stable memory.
+/// Gets current size of the stable memory in WebAssembly pages.
 pub fn size() -> u64 {
     stable64_size()
 }
 
 /// Reads data from the stable memory location specified by an offset.
 pub fn read(stable_memory: &mut StableMemory, buf: &mut [u8]) -> Result<usize, StableMemoryError> {
-    let capacity = (size() as usize) << 16;
+    let capacity = capacity();
     let read_buf = if buf.len() + stable_memory.offset > capacity {
         if stable_memory.offset < capacity {
             &mut buf[..capacity - stable_memory.offset]
@@ -57,9 +62,9 @@ fn seek(stable_memory: &mut StableMemory, pos: io::SeekFrom) -> Result<u64, Stab
             Ok(stable_memory.offset as u64)
         }
         io::SeekFrom::End(end) => {
-            let capacity = size();
+            let capacity = capacity();
             if capacity as i64 + end >= 0 {
-                stable_memory.offset = ((capacity as usize) << 16) + (end as usize);
+                stable_memory.offset = capacity + (end as usize);
                 Ok(stable_memory.offset as u64)
             } else {
                 Err(StableMemoryError::OutOfBounds)
