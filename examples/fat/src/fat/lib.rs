@@ -39,7 +39,7 @@ thread_local! {
             // A Wasm memory page is 2^16 bytes. Canisters have a 4 Gigabyte limit.
             // 4 GB is 2^16 * 2^16 bytes. Apparently we can grow beyond that to 2^17
             // pages.
-            stable_memory.grow(2 ^ 17)?;
+            icfs::StableMemory::grow(2 ^ 17)?;
             // TODO: stable_memory.grow(core::arch::wasm32::memory_size(0))?;
 
             // TODO:
@@ -101,13 +101,16 @@ fn check_ic_cdk_stable_memory_api() {
 }
 
 fn check_icfs_stable_memory_api() {
+    let size = icfs::StableMemory::size();
+    ic_cdk::print(format!("size: {:#?}", size));
+
     let mut stable_memory = icfs::StableMemory::default();
 
     let write_buf = [1, 2, 3];
     ic_cdk::print(format!("write_buf: {:#?}", write_buf));
     stable_memory.write(&write_buf).expect("stable_memory.write");
 
-    let bytes = icfs::StableMemory::bytes();
+    let bytes = icfs::bytes();
     ic_cdk::print(format!("bytes: {:#?}", bytes[0..3].to_vec()));
 
     let mut read_buf = vec![0; write_buf.len()];
@@ -124,7 +127,7 @@ fn _init() -> std::io::Result<()> {
         .try_into()
         .map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error))?;
 
-    stable_memory.grow(memory_pages)?;
+    icfs::StableMemory::grow(memory_pages)?;
 
     // TODO:
     // let stable_memory = fscommon::BufStream::new(stable_memory);
@@ -158,12 +161,13 @@ fn _init() -> std::io::Result<()> {
                 .map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error))
         })
         .collect();
-    let entries = entries.map(|entries| entries.join("\n"))?; // FIXME: entries is empty
+    let entries = entries.map(|entries| entries.join("\n"))?;
     ic_cdk::print(format!("entries: {}", entries));
     //
-    let mut file = root_dir.open_file(filename)?; // FIXME: this fails with NotFound
+    let mut file = root_dir.open_file(filename)?;
     let mut buf = vec![0; contents.len()];
-    file.read_to_end(&mut buf)?;
+    file.read_to_end(&mut buf)?; // FIXME: buf is still zeroed out
+    ic_cdk::print(format!("buf: {:#?}", buf));
     let contents = String::from_utf8(buf)
         .map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error))?;
     ic_cdk::print(format!("contents: {}", contents));

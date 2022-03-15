@@ -1,57 +1,142 @@
-mod stable;
+// Based on https://github.com/dfinity/cdk-rs/blob/a253119adb08929b6304d007ee0a6a37960656ed/src/ic-cdk/src/api/stable.rs
+// * Supports 64-bit addressed memory
+use ic_cdk::api::stable::{
+    stable64_grow, stable64_read, stable64_size, stable64_write, StableMemoryError,
+};
+use std::io;
 
-use ic_cdk::api::stable::{stable64_read, stable64_size};
-use stable::{StableReader, StableSeeker, StableWriter};
-
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone)]
 pub struct StableMemory {
-    reader: StableReader,
-    writer: StableWriter,
-    seeker: StableSeeker,
+    offset: usize,
+}
+
+/// Returns a copy of the stable memory.
+///
+/// This will map the whole memory (even if not all of it has been written to).
+pub fn bytes() -> Vec<u8> {
+    let size = (size() as usize) << 16;
+    let mut vec = Vec::with_capacity(size);
+    unsafe {
+        vec.set_len(size);
+    }
+    stable64_read(0, vec.as_mut_slice());
+    vec
+}
+
+/// Attempts to grow the memory by adding new pages.
+pub fn grow(added_pages: u64) -> Result<u64, StableMemoryError> {
+    stable64_grow(added_pages)
+}
+
+/// Gets current size of the stable memory.
+pub fn size() -> u64 {
+    stable64_size()
+}
+
+/// Reads data from the stable memory location specified by an offset.
+pub fn read(stable_memory: &mut StableMemory, buf: &mut [u8]) -> Result<usize, StableMemoryError> {
+    let capacity = (size() as usize) << 16;
+    let read_buf = if buf.len() + stable_memory.offset > capacity {
+        if stable_memory.offset < capacity {
+            &mut buf[..capacity - stable_memory.offset]
+        } else {
+            return Err(StableMemoryError::OutOfBounds);
+        }
+    } else {
+        buf
+    };
+    stable64_read(stable_memory.offset as u64, read_buf);
+    stable_memory.offset += read_buf.len();
+    Ok(read_buf.len())
+}
+
+fn seek(stable_memory: &mut StableMemory, pos: io::SeekFrom) -> Result<u64, StableMemoryError> {
+    match pos {
+        io::SeekFrom::Start(start) => {
+            stable_memory.offset = start as usize;
+            Ok(stable_memory.offset as u64)
+        }
+        io::SeekFrom::End(end) => {
+            let capacity = size();
+            if capacity as i64 + end >= 0 {
+                stable_memory.offset = ((capacity as usize) << 16) + (end as usize);
+                Ok(stable_memory.offset as u64)
+            } else {
+                Err(StableMemoryError::OutOfBounds)
+            }
+        }
+        io::SeekFrom::Current(current) => {
+            if stable_memory.offset as i64 + current >= 0 {
+                stable_memory.offset += current as usize;
+                Ok(stable_memory.offset as u64)
+            } else {
+                Err(StableMemoryError::OutOfBounds)
+            }
+        }
+    }
+}
+
+/// Writes a byte slice to the buffer.
+///
+/// The only condition where this will
+/// error out is if it cannot grow the memory.
+pub fn write(stable_memory: &mut StableMemory, buf: &[u8]) -> Result<usize, StableMemoryError> {
+    if stable_memory.offset + buf.len() > ((size() as usize) << 16) {
+        grow((buf.len() >> 16) as u64 + 1)?;
+    }
+    stable64_write(stable_memory.offset as u64, buf);
+    stable_memory.offset += buf.len();
+    Ok(buf.len())
 }
 
 impl StableMemory {
+    /// Returns a copy of the stable memory.
+    ///
+    /// This will map the whole memory (even if not all of it has been written to).
     pub fn bytes() -> Vec<u8> {
-        let size = (stable64_size() as usize) << 16;
-        let mut vec = Vec::with_capacity(size);
-        unsafe {
-            vec.set_len(size);
-        }
-
-        stable64_read(0, vec.as_mut_slice());
-
-        vec
+        bytes()
     }
 
-    pub fn grow(&mut self, added_pages: u64) -> std::io::Result<()> {
-        self.writer.grow(added_pages).map_err(|_| {
+    /// Attempts to grow the memory by adding new pages.
+    pub fn grow(added_pages: u64) -> std::io::Result<u64> {
+        grow(added_pages).map_err(|_| {
             std::io::Error::new(std::io::ErrorKind::Other, "Unable to grow stable memory")
         })
     }
 
+    /// Gets current size of the stable memory.
     pub fn size() -> u64 {
-        stable64_size()
+        size()
+    }
+}
+
+impl Default for StableMemory {
+    fn default() -> Self {
+        Self { offset: 0 }
     }
 }
 
 impl std::io::Read for StableMemory {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        <StableReader as std::io::Read>::read(&mut self.reader, buf)
+        // self.read(buf).or(Ok(0)) // Read defines EOF to be success
+        read(self, buf).map_err(|e| io::Error::new(io::ErrorKind::Other, e))
     }
 }
 
 impl std::io::Write for StableMemory {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        <StableWriter as std::io::Write>::write(&mut self.writer, buf)
+        write(self, buf).map_err(|e| io::Error::new(io::ErrorKind::OutOfMemory, e))
     }
 
     fn flush(&mut self) -> std::io::Result<()> {
-        self.writer.flush()
+        // No-op.
+        Ok(())
     }
 }
 
 impl std::io::Seek for StableMemory {
     fn seek(&mut self, pos: std::io::SeekFrom) -> std::io::Result<u64> {
-        self.seeker.seek(pos)
+        seek(self, pos)
+            .map_err(|_| io::Error::new(io::ErrorKind::Other, "Attempt to seek before byte 0"))
     }
 }
