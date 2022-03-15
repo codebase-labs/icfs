@@ -62,17 +62,18 @@ fn seek(stable_memory: &mut StableMemory, pos: io::SeekFrom) -> Result<u64, Stab
             Ok(stable_memory.offset as u64)
         }
         io::SeekFrom::End(end) => {
-            let capacity = capacity();
-            if capacity as i64 + end >= 0 {
-                stable_memory.offset = capacity + (end as usize);
+            let new_offset = capacity() as i64 + end;
+            if new_offset >= 0 {
+                stable_memory.offset = new_offset as usize;
                 Ok(stable_memory.offset as u64)
             } else {
                 Err(StableMemoryError::OutOfBounds)
             }
         }
         io::SeekFrom::Current(current) => {
-            if stable_memory.offset as i64 + current >= 0 {
-                stable_memory.offset += current as usize;
+            let new_offset = stable_memory.offset as i64 + current;
+            if new_offset >= 0 {
+                stable_memory.offset = new_offset as usize;
                 Ok(stable_memory.offset as u64)
             } else {
                 Err(StableMemoryError::OutOfBounds)
