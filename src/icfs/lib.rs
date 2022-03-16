@@ -10,6 +10,14 @@ pub struct StableMemory {
     offset: usize,
 }
 
+fn get_offset(stable_memory: &StableMemory) -> usize {
+    stable_memory.offset
+}
+
+fn set_offset(stable_memory: &mut StableMemory, offset: usize) {
+    stable_memory.offset = offset
+}
+
 /// Returns a copy of the stable memory.
 ///
 /// This will map the whole memory (even if not all of it has been written to).
@@ -40,41 +48,42 @@ pub fn size() -> u64 {
 
 /// Reads data from the stable memory location specified by an offset.
 pub fn read(stable_memory: &mut StableMemory, buf: &mut [u8]) -> Result<usize, StableMemoryError> {
+    let offset = get_offset(stable_memory);
     let capacity = capacity();
-    let read_buf = if buf.len() + stable_memory.offset > capacity {
-        if stable_memory.offset < capacity {
-            &mut buf[..capacity - stable_memory.offset]
+    let read_buf = if buf.len() + offset > capacity {
+        if offset < capacity {
+            &mut buf[..capacity - offset]
         } else {
             return Err(StableMemoryError::OutOfBounds);
         }
     } else {
         buf
     };
-    stable64_read(stable_memory.offset as u64, read_buf);
-    stable_memory.offset += read_buf.len();
+    stable64_read(offset as u64, read_buf);
+    set_offset(stable_memory, offset + read_buf.len());
     Ok(read_buf.len())
 }
 
 fn seek(stable_memory: &mut StableMemory, pos: io::SeekFrom) -> Result<u64, StableMemoryError> {
     match pos {
         io::SeekFrom::Start(start) => {
-            stable_memory.offset = start as usize;
-            Ok(stable_memory.offset as u64)
+            set_offset(stable_memory, start as usize);
+            Ok(get_offset(stable_memory) as u64)
         }
         io::SeekFrom::End(end) => {
             let new_offset = capacity() as i64 + end;
             if new_offset >= 0 {
-                stable_memory.offset = new_offset as usize;
-                Ok(stable_memory.offset as u64)
+                set_offset(stable_memory, new_offset as usize);
+                Ok(get_offset(stable_memory) as u64)
             } else {
                 Err(StableMemoryError::OutOfBounds)
             }
         }
         io::SeekFrom::Current(current) => {
-            let new_offset = stable_memory.offset as i64 + current;
+            let new_offset = get_offset(stable_memory) as i64 + current;
             if new_offset >= 0 {
-                stable_memory.offset = new_offset as usize;
-                Ok(stable_memory.offset as u64)
+                set_offset(stable_memory, new_offset as usize);
+                Ok(get_offset(stable_memory) as u64)
             } else {
                 Err(StableMemoryError::OutOfBounds)
             }
@@ -87,12 +96,13 @@ fn seek(stable_memory: &mut StableMemory, pos: io::SeekFrom) -> Result<u64, Stab
 /// The only condition where this will
 /// error out is if it cannot grow the memory.
 pub fn write(stable_memory: &mut StableMemory, buf: &[u8]) -> Result<usize, StableMemoryError> {
-    let new_offset = stable_memory.offset + buf.len();
+    let offset = get_offset(stable_memory);
+    let new_offset = offset + buf.len();
     if new_offset > capacity() {
         grow((buf.len() >> 16) as u64 + 1)?;
     }
-    stable64_write(stable_memory.offset as u64, buf);
-    stable_memory.offset = new_offset;
+    stable64_write(offset as u64, buf);
+    set_offset(stable_memory, new_offset);
     Ok(buf.len())
 }
 
