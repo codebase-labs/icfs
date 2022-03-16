@@ -77,15 +77,15 @@ fn _ls() -> std::io::Result<String> {
 }
 
 #[query]
-fn read_hello() -> String {
-    _read_hello().unwrap()
+fn read_file(filename: String) -> String {
+    _read_file(filename).unwrap()
 }
 
-fn _read_hello() -> std::io::Result<String> {
+fn _read_file(filename: String) -> std::io::Result<String> {
     FS.with(|fs| {
         let fs = fs.borrow();
         let root_dir = fs.root_dir();
-        let mut file = root_dir.open_file("hello.txt")?;
+        let mut file = root_dir.open_file(&filename)?;
         let mut buf = vec![];
         file.read_to_end(&mut buf)?;
         let contents = String::from_utf8(buf)
@@ -95,18 +95,17 @@ fn _read_hello() -> std::io::Result<String> {
 }
 
 #[update]
-fn write_hello(name: String) {
-    _write_hello(name).unwrap();
+fn write_file(filename: String, contents: String) {
+    _write_file(filename, contents).unwrap();
 }
 
-fn _write_hello(name: String) -> std::io::Result<()> {
+fn _write_file(filename: String, contents: String) -> std::io::Result<()> {
     FS.with(|fs| {
         let fs = fs.borrow();
         let root_dir = fs.root_dir();
-        let mut file = root_dir.create_file("hello.txt")?;
-        let contents = format!("Hello, {}!", name).into_bytes();
+        let mut file = root_dir.create_file(&filename)?;
         file.truncate()?;
-        file.write_all(&contents)?;
+        file.write_all(&contents.into_bytes())?;
         file.flush()?;
         Ok(())
     })
