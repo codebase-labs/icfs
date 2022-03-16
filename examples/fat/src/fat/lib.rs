@@ -153,6 +153,7 @@ fn _init() -> std::io::Result<()> {
     let root_dir = fs.root_dir();
     let mut file = root_dir.create_file(filename)?;
     let contents = format!("Hello, {}!", name).into_bytes();
+    ic_cdk::print(format!("contents: {:#?}", contents));
     file.write_all(&contents)?;
     //
     let entries: std::io::Result<Vec<String>> = root_dir
@@ -170,9 +171,9 @@ fn _init() -> std::io::Result<()> {
     let mut buf = vec![0; contents.len()];
     file.read_to_end(&mut buf)?; // FIXME: buf is still zeroed out
     ic_cdk::print(format!("buf: {:#?}", buf));
-    let contents = String::from_utf8(buf)
+    let contents_read = String::from_utf8(buf)
         .map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error))?;
-    ic_cdk::print(format!("contents: {}", contents));
+    ic_cdk::print(format!("contents_read: {}", contents_read));
     //
     Ok(())
     // })
