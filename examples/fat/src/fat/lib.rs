@@ -30,7 +30,7 @@ thread_local! {
                 .map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error))?;
 
             #[cfg(not(target_arch = "wasm32"))]
-            let memory_pages = 1; // FIXME
+            let memory_pages = 19;
 
             icfs::StableMemory::grow(memory_pages)?;
 
