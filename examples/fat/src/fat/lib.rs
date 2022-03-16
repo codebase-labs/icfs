@@ -13,7 +13,6 @@ type FileSystem = fatfs::FileSystem<
     fatfs::LossyOemCpConverter,
 >;
 
-// #[cfg(target_arch = "wasm32")]
 thread_local! {
     // static STABLE_MEMORY: std::cell::RefCell<fscommon::BufStream<icfs::StableMemory>>
     //     = std::cell::RefCell::new(fscommon::BufStream::new(icfs::StableMemory::default()));
