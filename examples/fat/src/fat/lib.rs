@@ -1,19 +1,6 @@
-use ic_cdk_macros::{init, query, update};
+use ic_cdk_macros::{query, update};
 use std::convert::TryInto;
-use std::io::{Read, Seek, Write};
-
-// TEMP
-fn stable64_bytes() -> Vec<u8> {
-    let size = (ic_cdk::api::stable::stable64_size() as usize) << 16;
-    let mut vec = Vec::with_capacity(size);
-    unsafe {
-        vec.set_len(size);
-    }
-
-    ic_cdk::api::stable::stable64_read(0, vec.as_mut_slice());
-
-    vec
-}
+use std::io::{Read, Write};
 
 // type FileSystem = fatfs::FileSystem<
 //     fatfs::StdIoWrapper<fscommon::BufStream<icfs::StableMemory>>,
@@ -26,6 +13,7 @@ type FileSystem = fatfs::FileSystem<
     fatfs::LossyOemCpConverter,
 >;
 
+// #[cfg(target_arch = "wasm32")]
 thread_local! {
     // static STABLE_MEMORY: std::cell::RefCell<fscommon::BufStream<icfs::StableMemory>>
     //     = std::cell::RefCell::new(fscommon::BufStream::new(icfs::StableMemory::default()));
@@ -34,15 +22,19 @@ thread_local! {
 
     static FS: std::cell::RefCell<FileSystem> = {
         let fs: std::io::Result<FileSystem> = STABLE_MEMORY.with(|stable_memory| {
-            let mut stable_memory = *stable_memory.borrow();
+            let stable_memory = *stable_memory.borrow();
 
-            // A Wasm memory page is 2^16 bytes. Canisters have a 4 Gigabyte limit.
-            // 4 GB is 2^16 * 2^16 bytes. Apparently we can grow beyond that to 2^17
-            // pages.
-            icfs::StableMemory::grow(2 ^ 17)?;
-            // TODO: stable_memory.grow(core::arch::wasm32::memory_size(0))?;
+            #[cfg(target_arch = "wasm32")]
+            let memory_pages = core::arch::wasm32::memory_size(0)
+                .try_into()
+                .map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error))?;
 
-            // TODO:
+            #[cfg(not(target_arch = "wasm32"))]
+            let memory_pages = 1; // FIXME
+
+            icfs::StableMemory::grow(memory_pages)?;
+
+            // TODO
             // let stable_memory = fscommon::BufStream::new(stable_memory);
 
             fatfs::format_volume(
@@ -61,127 +53,6 @@ thread_local! {
 
         std::cell::RefCell::new(fs.unwrap())
     };
-}
-
-#[init]
-fn init() {
-    ic_cdk::print("init");
-
-    // TEMP
-    // check_ic_cdk_stable_memory_api();
-
-    // TEMP
-    // check_icfs_stable_memory_api();
-
-    #[cfg(target_arch = "wasm32")]
-    _init().unwrap()
-}
-
-fn check_ic_cdk_stable_memory_api() {
-    let size = ic_cdk::api::stable::stable64_size();
-    ic_cdk::print(format!("size: {:#?}", size));
-
-    ic_cdk::api::stable::stable64_grow(1)
-        .map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Unable to grow stable memory"))
-        .unwrap();
-
-    let size = ic_cdk::api::stable::stable64_size();
-    ic_cdk::print(format!("size: {:#?}", size));
-
-    let write_buf = [1, 2, 3];
-    ic_cdk::print(format!("write_buf: {:#?}", write_buf));
-    ic_cdk::api::stable::stable64_write(0, &write_buf);
-
-    let mut read_buf = vec![0; write_buf.len()];
-    ic_cdk::api::stable::stable64_read(0, &mut read_buf);
-    ic_cdk::print(format!("read_buf: {:#?}", read_buf));
-
-    let bytes = stable64_bytes();
-    ic_cdk::print(format!("bytes: {:#?}", bytes[0..3].to_vec())); // Prints [1, 2, 3]
-}
-
-fn check_icfs_stable_memory_api() {
-    let size = icfs::StableMemory::size();
-    ic_cdk::print(format!("size: {:#?}", size));
-
-    let capacity = icfs::StableMemory::capacity();
-    ic_cdk::print(format!("capacity: {:#?}", capacity));
-
-    let mut stable_memory = icfs::StableMemory::default();
-
-    let write_buf = [1, 2, 3];
-    ic_cdk::print(format!("write_buf: {:#?}", write_buf));
-    stable_memory.write(&write_buf).expect("stable_memory.write");
-
-    let bytes = icfs::bytes();
-    ic_cdk::print(format!("bytes: {:#?}", bytes[0..3].to_vec()));
-
-    stable_memory.seek(std::io::SeekFrom::Start(0)).unwrap();
-    ic_cdk::print(format!("stable_memory.seek"));
-
-    let mut read_buf = vec![0; write_buf.len()];
-    stable_memory.read(&mut read_buf).expect("stable_memory.read");
-    ic_cdk::print(format!("read_buf: {:#?}", read_buf)); // Prints [1, 2, 3]
-}
-
-#[cfg(target_arch = "wasm32")]
-fn _init() -> std::io::Result<()> {
-    // FIXME: debugging file not found
-    let mut stable_memory = icfs::StableMemory::default();
-
-    let memory_pages = core::arch::wasm32::memory_size(0)
-        .try_into()
-        .map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error))?;
-
-    icfs::StableMemory::grow(memory_pages)?;
-
-    // TODO:
-    // let stable_memory = fscommon::BufStream::new(stable_memory);
-
-    fatfs::format_volume(
-        &mut fatfs::StdIoWrapper::from(stable_memory),
-        fatfs::FormatVolumeOptions::new(),
-    )?;
-
-    let options = fatfs::FsOptions::new()
-        .time_provider(InternetComputerTimeProvider::new())
-        .update_accessed_date(true);
-
-    let fs = fatfs::FileSystem::new(stable_memory, options)?;
-
-    // FS.with(|fs| {
-    // let fs = fs.borrow();
-    let filename = "hello.txt";
-    let name = "World!";
-    //
-    let root_dir = fs.root_dir();
-    let mut file = root_dir.create_file(filename)?;
-    let contents_to_write = format!("Hello, {}!", name).into_bytes();
-    ic_cdk::print(format!("contents_to_write: {:#?}", contents_to_write));
-    file.write_all(&contents_to_write)?;
-    file.flush()?;
-    //
-    let entries: std::io::Result<Vec<String>> = root_dir
-        .iter()
-        .map(|entry| {
-            entry
-                .map(|e| e.file_name())
-                .map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error))
-        })
-        .collect();
-    let entries = entries.map(|entries| entries.join("\n"))?;
-    ic_cdk::print(format!("entries: {}", entries));
-    //
-    let mut file_to_read = root_dir.open_file(filename)?;
-    let mut buf = vec![];
-    file_to_read.read_to_end(&mut buf)?;
-    ic_cdk::print(format!("buf: {:#?}", buf));
-    let contents_read = String::from_utf8(buf)
-        .map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error))?;
-    ic_cdk::print(format!("contents_read: {}", contents_read));
-    //
-    Ok(())
-    // })
 }
 
 #[query]
@@ -234,12 +105,14 @@ fn _write_hello(name: String) -> std::io::Result<()> {
         let root_dir = fs.root_dir();
         let mut file = root_dir.create_file("hello.txt")?;
         let contents = format!("Hello, {}!", name).into_bytes();
+        file.truncate()?;
         file.write_all(&contents)?;
+        file.flush()?;
         Ok(())
     })
 }
 
-//
+// TODO: move to own module
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct InternetComputerTimeProvider {
