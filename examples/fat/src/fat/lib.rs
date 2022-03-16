@@ -104,6 +104,9 @@ fn check_icfs_stable_memory_api() {
     let size = icfs::StableMemory::size();
     ic_cdk::print(format!("size: {:#?}", size));
 
+    let capacity = icfs::StableMemory::capacity();
+    ic_cdk::print(format!("capacity: {:#?}", capacity));
+
     let mut stable_memory = icfs::StableMemory::default();
 
     let write_buf = [1, 2, 3];
@@ -114,6 +117,7 @@ fn check_icfs_stable_memory_api() {
     ic_cdk::print(format!("bytes: {:#?}", bytes[0..3].to_vec()));
 
     stable_memory.seek(std::io::SeekFrom::Start(0)).unwrap();
+    ic_cdk::print(format!("stable_memory.seek"));
 
     let mut read_buf = vec![0; write_buf.len()];
     stable_memory.read(&mut read_buf).expect("stable_memory.read");
@@ -152,9 +156,9 @@ fn _init() -> std::io::Result<()> {
     //
     let root_dir = fs.root_dir();
     let mut file = root_dir.create_file(filename)?;
-    let contents = format!("Hello, {}!", name).into_bytes();
-    ic_cdk::print(format!("contents: {:#?}", contents));
-    file.write_all(&contents)?;
+    let contents_to_write = format!("Hello, {}!", name).into_bytes();
+    ic_cdk::print(format!("contents_to_write: {:#?}", contents_to_write));
+    file.write_all(&contents_to_write)?;
     //
     let entries: std::io::Result<Vec<String>> = root_dir
         .iter()
@@ -167,9 +171,9 @@ fn _init() -> std::io::Result<()> {
     let entries = entries.map(|entries| entries.join("\n"))?;
     ic_cdk::print(format!("entries: {}", entries));
     //
-    let mut file = root_dir.open_file(filename)?;
-    let mut buf = vec![0; contents.len()];
-    file.read_to_end(&mut buf)?; // FIXME: buf is still zeroed out
+    let mut file_to_read = root_dir.open_file(filename)?;
+    let mut buf = vec![];
+    file_to_read.read_to_end(&mut buf)?;
     ic_cdk::print(format!("buf: {:#?}", buf));
     let contents_read = String::from_utf8(buf)
         .map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error))?;
