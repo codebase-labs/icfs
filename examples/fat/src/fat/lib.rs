@@ -159,6 +159,7 @@ fn _init() -> std::io::Result<()> {
     let contents_to_write = format!("Hello, {}!", name).into_bytes();
     ic_cdk::print(format!("contents_to_write: {:#?}", contents_to_write));
     file.write_all(&contents_to_write)?;
+    file.flush()?;
     //
     let entries: std::io::Result<Vec<String>> = root_dir
         .iter()
