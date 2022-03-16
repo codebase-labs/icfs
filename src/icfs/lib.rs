@@ -104,6 +104,11 @@ impl StableMemory {
         bytes()
     }
 
+    /// Gets capacity of the stable memory in bytes.
+    pub fn capacity() -> usize {
+        capacity()
+    }
+
     /// Attempts to grow the memory by adding new pages.
     pub fn grow(added_pages: u64) -> std::io::Result<u64> {
         grow(added_pages).map_err(|_| {
@@ -111,7 +116,7 @@ impl StableMemory {
         })
     }
 
-    /// Gets current size of the stable memory.
+    /// Gets current size of the stable memory in WebAssembly pages.
     pub fn size() -> u64 {
         size()
     }
