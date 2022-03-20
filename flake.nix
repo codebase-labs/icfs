@@ -88,6 +88,25 @@
             copyTarget = true;
           };
 
+          packages.fat = naersk-lib.buildPackage rec {
+            pname = "fat";
+            root = ./.;
+            buildInputs = [] ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
+              pkgs.libiconv
+            ];
+            cargoBuildOptions = x: x ++ [
+              "--package" pname
+              "--target" "wasm32-unknown-unknown"
+            ];
+            cargoTestOptions = x: x ++ [
+              "--package" pname
+              "--target" "wasm32-unknown-unknown"
+            ];
+            compressTarget = false;
+            copyBins = false;
+            copyTarget = true;
+          };
+
           defaultPackage = packages.icfs;
 
           # `nix develop`
