@@ -3,8 +3,12 @@ on:
   pull_request:
   push:
 jobs:
-  tests:
-    runs-on: macos-latest
+  nix:
+    name: Nix on ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v2.4.0
     - uses: cachix/install-nix-action@v15
