@@ -79,7 +79,7 @@
             cargoTestOptions = x: x ++ [
               "--target" "wasm32-unknown-unknown"
             ];
-            compressTarget = false;
+            compressTarget = true;
             copyBins = false;
             copyTarget = true;
           };
@@ -95,7 +95,7 @@
               "--package" pname
               "--target" "wasm32-unknown-unknown"
             ];
-            compressTarget = false;
+            compressTarget = true;
             copyBins = false;
             copyTarget = true;
           };
@@ -111,7 +111,7 @@
               "--package" pname
               "--target" "wasm32-unknown-unknown"
             ];
-            compressTarget = false;
+            compressTarget = true;
             copyBins = false;
             copyTarget = true;
           };
