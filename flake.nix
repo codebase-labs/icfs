@@ -69,6 +69,21 @@
       in
         rec {
           # `nix build`
+          defaultPackage = packages.workspace;
+
+          packages.workspace = naersk-lib.buildPackage rec {
+            root = ./.;
+            cargoBuildOptions = x: x ++ [
+              "--target" "wasm32-unknown-unknown"
+            ];
+            cargoTestOptions = x: x ++ [
+              "--target" "wasm32-unknown-unknown"
+            ];
+            compressTarget = false;
+            copyBins = false;
+            copyTarget = true;
+          };
+
           packages.icfs = naersk-lib.buildPackage rec {
             pname = "icfs";
             root = ./.;
@@ -100,8 +115,6 @@
             copyBins = false;
             copyTarget = true;
           };
-
-          defaultPackage = packages.icfs;
 
           # `nix develop`
           devShell = pkgs.mkShell {
