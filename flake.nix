@@ -72,9 +72,6 @@
           packages.icfs = naersk-lib.buildPackage rec {
             pname = "icfs";
             root = ./.;
-            buildInputs = [] ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
-              pkgs.libiconv
-            ];
             cargoBuildOptions = x: x ++ [
               "--package" pname
               "--target" "wasm32-unknown-unknown"
@@ -91,9 +88,6 @@
           packages.fat = naersk-lib.buildPackage rec {
             pname = "fat";
             root = ./.;
-            buildInputs = [] ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
-              pkgs.libiconv
-            ];
             cargoBuildOptions = x: x ++ [
               "--package" pname
               "--target" "wasm32-unknown-unknown"
