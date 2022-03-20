@@ -66,55 +66,40 @@
           acceptLicenseAgreement = true;
           sdkSystem = system;
         })."0.8.4";
+
+        buildRustPackage = name:
+          let
+            defaultArgs = [
+              "--target" "wasm32-unknown-unknown"
+            ];
+            packageArgs = [
+              "--package" name
+            ];
+          in
+            naersk-lib.buildPackage {
+              root = ./.;
+              cargoBuildOptions = x: x ++ defaultArgs ++ packageArgs;
+              cargoTestOptions = x: x ++ defaultArgs ++ packageArgs;
+              compressTarget = true;
+              copyBins = false;
+              copyTarget = true;
+            };
       in
         rec {
           # `nix build`
-          defaultPackage = packages.workspace;
+          defaultPackage = packages.all;
 
-          packages.workspace = naersk-lib.buildPackage rec {
-            root = ./.;
-            cargoBuildOptions = x: x ++ [
-              "--target" "wasm32-unknown-unknown"
+          packages.all =  pkgs.runCommand "all" {
+            buildInputs = [
+              packages.icfs
+              packages.fat
             ];
-            cargoTestOptions = x: x ++ [
-              "--target" "wasm32-unknown-unknown"
-            ];
-            compressTarget = true;
-            copyBins = false;
-            copyTarget = true;
-          };
+          } ''
+            touch $out
+          '';
 
-          packages.icfs = naersk-lib.buildPackage rec {
-            pname = "icfs";
-            root = ./.;
-            cargoBuildOptions = x: x ++ [
-              "--package" pname
-              "--target" "wasm32-unknown-unknown"
-            ];
-            cargoTestOptions = x: x ++ [
-              "--package" pname
-              "--target" "wasm32-unknown-unknown"
-            ];
-            compressTarget = true;
-            copyBins = false;
-            copyTarget = true;
-          };
-
-          packages.fat = naersk-lib.buildPackage rec {
-            pname = "fat";
-            root = ./.;
-            cargoBuildOptions = x: x ++ [
-              "--package" pname
-              "--target" "wasm32-unknown-unknown"
-            ];
-            cargoTestOptions = x: x ++ [
-              "--package" pname
-              "--target" "wasm32-unknown-unknown"
-            ];
-            compressTarget = true;
-            copyBins = false;
-            copyTarget = true;
-          };
+          packages.icfs = buildRustPackage "icfs";
+          packages.fat = buildRustPackage "fat";
 
           # `nix develop`
           devShell = pkgs.mkShell {
