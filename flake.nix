@@ -35,7 +35,7 @@
         rust = (mozilla.rustChannelOf {
           channel = "stable";
           version = "1.54.0";
-          sha256 = "NL+YHnOj1++1O7CAaQLijwAxKJW9SnHg8qsiOJ1m0Kk=";
+          sha256 = "4IUZZWXHBBxcwRuQm9ekOwzc0oNqH/9NkI1ejW7KajU=";
           # sha256 = pkgs.lib.fakeSha256;
         }).rust.override {
           extensions = [
