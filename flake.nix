@@ -33,9 +33,8 @@
         # Get a specific rust version
         mozilla = pkgs.callPackage (mozillapkgs + "/package-set.nix") {};
         rust = (mozilla.rustChannelOf {
-          channel = "stable";
-          version = "1.54.0";
-          sha256 = "4IUZZWXHBBxcwRuQm9ekOwzc0oNqH/9NkI1ejW7KajU=";
+          channel = "1.55.0";
+          sha256 = "HNIlEerJvk6sBfd8zugzwSgSiHcQH8ZbqWQn9BGfmpo=";
           # sha256 = pkgs.lib.fakeSha256;
         }).rust.override {
           extensions = [
