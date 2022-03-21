@@ -5,12 +5,13 @@
       flake = false;
     };
     flake-utils.url = "github:numtide/flake-utils";
-    mozillapkgs = {
-      url = "github:mozilla/nixpkgs-mozilla";
-      flake = false;
-    };
-    naersk.url = "github:nix-community/naersk";
+
+    # https://github.com/nix-community/naersk/pull/211
+    naersk.url = "github:mhuesch/naersk?rev=193e049d6e4c841faf800e302551d2e0a48eee88";
+    # naersk.url = "github:nix-community/naersk";
+
     nixpkgs.url = "github:nixos/nixpkgs/21.11";
+    nixpkgs-mozilla.url = "github:mozilla/nixpkgs-mozilla";
   };
 
   outputs = {
@@ -18,8 +19,8 @@
     nixpkgs,
     dfinity-sdk,
     flake-utils,
-    mozillapkgs,
     naersk,
+    nixpkgs-mozilla,
   }:
     flake-utils.lib.eachDefaultSystem (
       system: let
@@ -31,11 +32,10 @@
         };
 
         # Get a specific rust version
-        mozilla = pkgs.callPackage (mozillapkgs + "/package-set.nix") {};
+        mozilla = pkgs.callPackage (nixpkgs-mozilla + "/package-set.nix") {};
         rust = (mozilla.rustChannelOf {
-          channel = "stable";
-          version = "1.54.0";
-          sha256 = "NL+YHnOj1++1O7CAaQLijwAxKJW9SnHg8qsiOJ1m0Kk=";
+          channel = "1.55.0";
+          sha256 = "HNIlEerJvk6sBfd8zugzwSgSiHcQH8ZbqWQn9BGfmpo=";
           # sha256 = pkgs.lib.fakeSha256;
         }).rust.override {
           extensions = [
