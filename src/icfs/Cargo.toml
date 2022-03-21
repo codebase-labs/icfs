@@ -12,4 +12,4 @@ path = "lib.rs"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-ic-cdk = { git = "https://github.com/dfinity/cdk-rs.git", rev = "a253119adb08929b6304d007ee0a6a37960656ed" }
+ic-cdk = { git = "https://github.com/dfinity/cdk-rs.git", ref = "main", rev = "a253119adb08929b6304d007ee0a6a37960656ed" }
