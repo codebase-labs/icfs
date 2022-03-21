@@ -31,22 +31,6 @@
         "type": "github"
       }
     },
-    "mozillapkgs": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1638887313,
-        "narHash": "sha256-FMYV6rVtvSIfthgC1sK1xugh3y7muoQcvduMdriz4ag=",
-        "owner": "mozilla",
-        "repo": "nixpkgs-mozilla",
-        "rev": "7c1e8b1dd6ed0043fb4ee0b12b815256b0b9de6f",
-        "type": "github"
-      },
-      "original": {
-        "owner": "mozilla",
-        "repo": "nixpkgs-mozilla",
-        "type": "github"
-      }
-    },
     "naersk": {
       "inputs": {
         "nixpkgs": "nixpkgs"
@@ -79,6 +63,21 @@
         "type": "indirect"
       }
     },
+    "nixpkgs-mozilla": {
+      "locked": {
+        "lastModified": 1645464064,
+        "narHash": "sha256-YeN4bpPvHkVOpQzb8APTAfE7/R+MFMwJUMkqmfvytSk=",
+        "owner": "mozilla",
+        "repo": "nixpkgs-mozilla",
+        "rev": "15b7a05f20aab51c4ffbefddb1b448e862dccb7d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "mozilla",
+        "repo": "nixpkgs-mozilla",
+        "type": "github"
+      }
+    },
     "nixpkgs_2": {
       "locked": {
         "lastModified": 1638239011,
@@ -99,9 +98,9 @@
       "inputs": {
         "dfinity-sdk": "dfinity-sdk",
         "flake-utils": "flake-utils",
-        "mozillapkgs": "mozillapkgs",
         "naersk": "naersk",
-        "nixpkgs": "nixpkgs_2"
+        "nixpkgs": "nixpkgs_2",
+        "nixpkgs-mozilla": "nixpkgs-mozilla"
       }
     }
   },

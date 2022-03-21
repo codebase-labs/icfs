@@ -5,12 +5,9 @@
       flake = false;
     };
     flake-utils.url = "github:numtide/flake-utils";
-    mozillapkgs = {
-      url = "github:mozilla/nixpkgs-mozilla";
-      flake = false;
-    };
     naersk.url = "github:nix-community/naersk";
     nixpkgs.url = "github:nixos/nixpkgs/21.11";
+    nixpkgs-mozilla.url = "github:mozilla/nixpkgs-mozilla";
   };
 
   outputs = {
@@ -18,8 +15,8 @@
     nixpkgs,
     dfinity-sdk,
     flake-utils,
-    mozillapkgs,
     naersk,
+    nixpkgs-mozilla,
   }:
     flake-utils.lib.eachDefaultSystem (
       system: let
@@ -31,7 +28,7 @@
         };
 
         # Get a specific rust version
-        mozilla = pkgs.callPackage (mozillapkgs + "/package-set.nix") {};
+        mozilla = pkgs.callPackage (nixpkgs-mozilla + "/package-set.nix") {};
         rust = (mozilla.rustChannelOf {
           channel = "1.55.0";
           sha256 = "HNIlEerJvk6sBfd8zugzwSgSiHcQH8ZbqWQn9BGfmpo=";
