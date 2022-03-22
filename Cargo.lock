@@ -274,7 +274,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "fatfs-example"
+name = "fatfs_example"
 version = "0.1.0"
 dependencies = [
  "fatfs",
