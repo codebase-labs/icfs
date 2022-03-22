@@ -92,14 +92,14 @@
           packages.all =  pkgs.runCommand "all" {
             buildInputs = [
               packages.icfs
-              packages.fat
+              packages.fatfs-example
             ];
           } ''
             touch $out
           '';
 
           packages.icfs = buildRustPackage "icfs";
-          packages.fat = buildRustPackage "fat";
+          packages.fatfs-example = buildRustPackage "fatfs_example";
 
           # `nix develop`
           devShell = pkgs.mkShell {

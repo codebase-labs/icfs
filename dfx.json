@@ -2,10 +2,10 @@
   "version": 1,
   "dfx": "0.8.4",
   "canisters": {
-    "fat": {
+    "fatfs": {
       "type": "rust",
-      "package": "fat",
-      "candid": "src/fat/fat.did"
+      "package": "fatfs_example",
+      "candid": "examples/src/fatfs/fatfs.did"
     }
   },
   "networks": {
