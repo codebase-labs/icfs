@@ -1,6 +1,3 @@
-mod time_provider;
-
-use crate::time_provider::InternetComputerTimeProvider;
 use ic_cdk_macros::{query, update};
 use std::io::{Read, Write};
 
@@ -9,12 +6,12 @@ use std::convert::TryInto;
 
 // type FileSystem = fatfs::FileSystem<
 //     fatfs::StdIoWrapper<fscommon::BufStream<icfs::StableMemory>>,
-//     InternetComputerTimeProvider,
+//     icfs_fatfs::TimeProvider,
 //     fatfs::LossyOemCpConverter,
 // >;
 type FileSystem = fatfs::FileSystem<
     fatfs::StdIoWrapper<icfs::StableMemory>,
-    InternetComputerTimeProvider,
+    icfs_fatfs::TimeProvider,
     fatfs::LossyOemCpConverter,
 >;
 
@@ -47,7 +44,7 @@ thread_local! {
             )?;
 
             let options = fatfs::FsOptions::new()
-                .time_provider(InternetComputerTimeProvider::new())
+                .time_provider(icfs_fatfs::TimeProvider::new())
                 .update_accessed_date(true);
 
             let fs = fatfs::FileSystem::new(stable_memory, options)?;

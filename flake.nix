@@ -99,6 +99,7 @@
           '';
 
           packages.icfs = buildRustPackage "icfs";
+          packages.icfs-fatfs = buildRustPackage "icfs-fatfs";
           packages.fatfs-example = buildRustPackage "fatfs_example";
 
           # `nix develop`

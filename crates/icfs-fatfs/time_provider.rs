@@ -1,18 +1,18 @@
 use std::convert::TryInto;
 
 #[derive(Debug, Clone, Copy, Default)]
-pub struct InternetComputerTimeProvider {
+pub struct TimeProvider {
     _dummy: (),
 }
 
-impl InternetComputerTimeProvider {
+impl TimeProvider {
     #[must_use]
     pub fn new() -> Self {
         Self { _dummy: () }
     }
 }
 
-impl fatfs::TimeProvider for InternetComputerTimeProvider {
+impl fatfs::TimeProvider for TimeProvider {
     fn get_current_date(&self) -> fatfs::Date {
         self.get_current_date_time().date
     }
