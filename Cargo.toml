@@ -1,5 +1,5 @@
 [workspace]
 members = [
     "src/icfs",
-    "examples/fat/src/fat",
+    "examples/fatfs/src/fatfs",
 ]
