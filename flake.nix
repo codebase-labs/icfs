@@ -99,7 +99,7 @@
           '';
 
           packages.icfs = buildRustPackage "icfs";
-          packages.fatfs-example = buildRustPackage "fatfs-example";
+          packages.fatfs-example = buildRustPackage "fatfs_example";
 
           # `nix develop`
           devShell = pkgs.mkShell {
