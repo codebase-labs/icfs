@@ -92,6 +92,7 @@
           packages.all =  pkgs.runCommand "all" {
             buildInputs = [
               packages.icfs
+              packages.icfs-fatfs
               packages.fatfs-example
             ];
           } ''
