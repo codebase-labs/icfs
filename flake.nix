@@ -87,14 +87,8 @@
       in
         rec {
           # `nix build`
-          defaultPackage = packages.all;
-
-          packages.all =  pkgs.runCommand "all" {
-            buildInputs = [
-              packages.icfs
-              packages.icfs-fatfs
-              packages.fatfs-example
-            ];
+          defaultPackage = pkgs.runCommand "all" {
+            buildInputs = pkgs.lib.attrValues packages;
           } ''
             touch $out
           '';
