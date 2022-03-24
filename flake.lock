@@ -3,11 +3,11 @@
     "dfinity-sdk": {
       "flake": false,
       "locked": {
-        "lastModified": 1648102482,
-        "narHash": "sha256-avzEqTpgCm2Dkhjee685bdTZpsY9SfPXzcnzct+svnU=",
+        "lastModified": 1648106475,
+        "narHash": "sha256-XPdoMuJz60wsqx6IbsIfyBHNtZXteL585FDu/5IdzoE=",
         "owner": "paulyoung",
         "repo": "nixpkgs-dfinity-sdk",
-        "rev": "1f53592728b471427a4b3b08563d2eadb8426883",
+        "rev": "9a2bb0b90499e05a97886e1313e4deca773dd4c2",
         "type": "github"
       },
       "original": {

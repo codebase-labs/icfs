@@ -129,7 +129,7 @@
           jq '.canisters = (.canisters | map_values(.build = "echo"))' dfx.json > new.dfx.json
           mv new.dfx.json dfx.json
 
-          dfx start --background --emulator
+          dfx start --background
           dfx deploy
           ic-repl --replica local examples/${name}/test.ic-repl
           dfx stop
