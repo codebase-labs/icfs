@@ -70,7 +70,7 @@
         dfinitySdk = (pkgs.dfinity-sdk {
           acceptLicenseAgreement = true;
           sdkSystem = system;
-        })."0.9.2";
+        })."0.8.4";
 
         buildRustPackage = name: root: attrs:
           let
