@@ -1,7 +1,7 @@
 {
   inputs = {
     dfinity-sdk = {
-      url = "github:paulyoung/nixpkgs-dfinity-sdk/patchelf";
+      url = "github:paulyoung/nixpkgs-dfinity-sdk";
       flake = false;
     };
     ic-repl-src = {
