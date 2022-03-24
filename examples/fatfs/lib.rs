@@ -57,11 +57,11 @@ thread_local! {
 }
 
 #[query]
-fn ls() -> String {
+fn ls() -> Vec<String> {
     _ls().unwrap()
 }
 
-fn _ls() -> std::io::Result<String> {
+fn _ls() -> std::io::Result<Vec<String>> {
     FS.with(|fs| {
         let fs = fs.borrow();
         let root_dir = fs.root_dir();
@@ -73,7 +73,7 @@ fn _ls() -> std::io::Result<String> {
                     .map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error))
             })
             .collect();
-        entries.map(|entries| entries.join("\n"))
+        entries
     })
 }
 

@@ -31,6 +31,22 @@
         "type": "github"
       }
     },
+    "ic-repl-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1645812852,
+        "narHash": "sha256-roC87vZmzwiC8q8DZBcN2g+GNXdaccWl60LHLTh8uM8=",
+        "owner": "chenyan2002",
+        "repo": "ic-repl",
+        "rev": "41b561942281533f67299e485c4763f3ce91f787",
+        "type": "github"
+      },
+      "original": {
+        "owner": "chenyan2002",
+        "repo": "ic-repl",
+        "type": "github"
+      }
+    },
     "naersk": {
       "inputs": {
         "nixpkgs": "nixpkgs"
@@ -99,6 +115,7 @@
       "inputs": {
         "dfinity-sdk": "dfinity-sdk",
         "flake-utils": "flake-utils",
+        "ic-repl-src": "ic-repl-src",
         "naersk": "naersk",
         "nixpkgs": "nixpkgs_2",
         "nixpkgs-mozilla": "nixpkgs-mozilla"

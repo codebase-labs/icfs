@@ -4,6 +4,10 @@
       url = "github:paulyoung/nixpkgs-dfinity-sdk";
       flake = false;
     };
+    ic-repl-src = {
+      url = "github:chenyan2002/ic-repl";
+      flake = false;
+    };
     flake-utils.url = "github:numtide/flake-utils";
 
     # https://github.com/nix-community/naersk/pull/211
@@ -19,6 +23,7 @@
     nixpkgs,
     dfinity-sdk,
     flake-utils,
+    ic-repl-src,
     naersk,
     nixpkgs-mozilla,
   }:
@@ -34,8 +39,8 @@
         # Get a specific rust version
         mozilla = pkgs.callPackage (nixpkgs-mozilla + "/package-set.nix") {};
         rust = (mozilla.rustChannelOf {
-          channel = "1.55.0";
-          sha256 = "HNIlEerJvk6sBfd8zugzwSgSiHcQH8ZbqWQn9BGfmpo=";
+          channel = "1.56.0";
+          sha256 = "L1e0o7azRjOHd0zBa+xkFnxdFulPofTedSTEYZSjj2s=";
           # sha256 = pkgs.lib.fakeSha256;
         }).rust.override {
           extensions = [
@@ -67,45 +72,89 @@
           sdkSystem = system;
         })."0.8.4";
 
-        buildRustPackage = name:
+        buildRustPackage = name: root: attrs:
           let
-            defaultArgs = [
-              "--target" "wasm32-unknown-unknown"
-            ];
             packageArgs = [
               "--package" name
             ];
           in
-            naersk-lib.buildPackage {
-              root = ./.;
-              cargoBuildOptions = x: x ++ defaultArgs ++ packageArgs;
-              cargoTestOptions = x: x ++ defaultArgs ++ packageArgs;
+            naersk-lib.buildPackage ({
+              inherit root;
               compressTarget = true;
-              copyBins = false;
+              copyBins = true;
+              copyLibs = true;
               copyTarget = true;
-            };
+            } // attrs);
+
+        buildLocalRustPackage = name:
+          let
+            options = [
+              "--package" name
+              "--target" "wasm32-unknown-unknown"
+            ];
+          in
+            buildRustPackage name ./. {
+              cargoBuildOptions = x: x ++ options;
+              cargoTestOptions = x: x ++ options;
+              copyBins = false;
+            }
+        ;
+
+        ic-repl =
+          buildRustPackage "ic-repl" ic-repl-src {
+            buildInputs = [] ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
+              pkgs.darwin.apple_sdk.frameworks.Security
+              pkgs.libiconv
+
+              # https://nixos.wiki/wiki/Rust#Building_the_openssl-sys_crate
+              pkgs.openssl_1_1
+              pkgs.pkgconfig
+            ];
+          };
+
+        buildExampleTest = name: package: pkgs.runCommand "${name}-example-test" {
+          buildInputs = [
+            dfinitySdk
+            ic-repl
+            pkgs.jq
+          ];
+        } ''
+          HOME=$TMP
+          cp -R ${package}/. result
+          mkdir -p examples/${name}
+          cp -R ${./examples}/${name}/. examples/${name}
+
+          cp ${./dfx.json} dfx.json
+          jq '.canisters = (.canisters | map_values(.build = "echo"))' dfx.json > new.dfx.json
+          mv new.dfx.json dfx.json
+
+          dfx start --background
+          dfx deploy
+          ic-repl --replica local examples/${name}/test.ic-repl
+          dfx stop
+
+          touch $out
+        '';
       in
         rec {
           # `nix build`
-          defaultPackage = packages.all;
-
-          packages.all =  pkgs.runCommand "all" {
-            buildInputs = [
-              packages.icfs
-              packages.fatfs-example
-            ];
+          defaultPackage = pkgs.runCommand "all" {
+            buildInputs = pkgs.lib.attrValues packages;
           } ''
             touch $out
           '';
 
-          packages.icfs = buildRustPackage "icfs";
-          packages.icfs-fatfs = buildRustPackage "icfs-fatfs";
-          packages.fatfs-example = buildRustPackage "fatfs_example";
+          packages.icfs = buildLocalRustPackage "icfs";
+          packages.icfs-fatfs = buildLocalRustPackage "icfs-fatfs";
+          packages.fatfs-example = buildLocalRustPackage "fatfs-example";
+
+          packages.fatfs-example-test = buildExampleTest "fatfs" packages.fatfs-example;
 
           # `nix develop`
           devShell = pkgs.mkShell {
             buildInputs = [
               dfinitySdk
+              ic-repl
             ] ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
               pkgs.libiconv
             ];
