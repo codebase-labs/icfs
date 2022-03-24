@@ -102,13 +102,14 @@
 
         ic-repl =
           buildRustPackage "ic-repl" ic-repl-src {
-            buildInputs = [] ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
-              pkgs.darwin.apple_sdk.frameworks.Security
+            buildInputs = [
               pkgs.libiconv
 
               # https://nixos.wiki/wiki/Rust#Building_the_openssl-sys_crate
               pkgs.openssl_1_1
               pkgs.pkgconfig
+            ] ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
+              pkgs.darwin.apple_sdk.frameworks.Security
             ];
           };
 
