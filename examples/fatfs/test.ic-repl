@@ -1,4 +1,5 @@
-import fatfs = "rrkah-fqaaa-aaaaa-aaaaq-cai" as "fatfs.did";
+// import fatfs = "rrkah-fqaaa-aaaaa-aaaaq-cai" as "fatfs.did";
+import fatfs = "ai7t5-aibaq-aaaaa-aaaaa-c" as "fatfs.did";
 
 let result = call fatfs.ls();
 assert result == vec {};
