@@ -3,11 +3,11 @@
     "dfinity-sdk": {
       "flake": false,
       "locked": {
-        "lastModified": 1646148919,
+        "lastModified": 1648113953,
         "narHash": "sha256-IklA+lDgK67wovqsFLaPpRms8NiI6MGC5c+lZKvPXIs=",
         "owner": "paulyoung",
         "repo": "nixpkgs-dfinity-sdk",
-        "rev": "03c839ae9ccc11415ef9f75b363724a3f7ccd4e0",
+        "rev": "28bb54dc1912cd723dc15f427b67c5309cfe851e",
         "type": "github"
       },
       "original": {
@@ -28,6 +28,22 @@
       "original": {
         "owner": "numtide",
         "repo": "flake-utils",
+        "type": "github"
+      }
+    },
+    "ic-repl-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1645812852,
+        "narHash": "sha256-roC87vZmzwiC8q8DZBcN2g+GNXdaccWl60LHLTh8uM8=",
+        "owner": "chenyan2002",
+        "repo": "ic-repl",
+        "rev": "41b561942281533f67299e485c4763f3ce91f787",
+        "type": "github"
+      },
+      "original": {
+        "owner": "chenyan2002",
+        "repo": "ic-repl",
         "type": "github"
       }
     },
@@ -99,6 +115,7 @@
       "inputs": {
         "dfinity-sdk": "dfinity-sdk",
         "flake-utils": "flake-utils",
+        "ic-repl-src": "ic-repl-src",
         "naersk": "naersk",
         "nixpkgs": "nixpkgs_2",
         "nixpkgs-mozilla": "nixpkgs-mozilla"

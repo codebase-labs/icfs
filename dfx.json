@@ -3,9 +3,10 @@
   "dfx": "0.8.4",
   "canisters": {
     "fatfs": {
-      "type": "rust",
-      "package": "fatfs_example",
-      "candid": "examples/src/fatfs/fatfs.did"
+      "type": "custom",
+      "build": "nix build '.#fatfs-example'",
+      "candid": "examples/fatfs/fatfs.did",
+      "wasm": "result/lib/fatfs_example.wasm"
     }
   },
   "networks": {

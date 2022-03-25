@@ -8,6 +8,7 @@ authors = ["Paul Young <84700+paulyoung@users.noreply.github.com>"]
 
 [lib]
 path = "lib.rs"
+crate-type = ["cdylib", "lib"]
 
 [dependencies]
 fatfs = { git = "https://github.com/rafalh/rust-fatfs", rev = "87fc1ed5074a32b4e0344fcdde77359ef9e75432" }
