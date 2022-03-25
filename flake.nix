@@ -1,7 +1,7 @@
 {
   inputs = {
     dfinity-sdk = {
-      url = "github:paulyoung/nixpkgs-dfinity-sdk";
+      url = "github:paulyoung/nixpkgs-dfinity-sdk/steam-run";
       flake = false;
     };
     ic-repl-src = {
