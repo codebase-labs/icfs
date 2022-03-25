@@ -136,8 +136,14 @@
 
           touch $out
         '';
+
+        packages = {
+          icfs = buildLocalRustPackage "icfs";
+          icfs-fatfs = buildLocalRustPackage "icfs-fatfs";
+          fatfs-example = buildLocalRustPackage "fatfs-example";
+        };
       in
-        rec {
+        {
           # `nix build`
           defaultPackage = pkgs.runCommand "all" {
             buildInputs = pkgs.lib.attrValues packages;
@@ -145,11 +151,9 @@
             touch $out
           '';
 
-          packages.icfs = buildLocalRustPackage "icfs";
-          packages.icfs-fatfs = buildLocalRustPackage "icfs-fatfs";
-          packages.fatfs-example = buildLocalRustPackage "fatfs-example";
-
-          packages.fatfs-example-test = buildExampleTest "fatfs" packages.fatfs-example;
+          packages = packages // pkgs.lib.optionalAttrs pkgs.stdenv.isDarwin {
+            fatfs-example-test = buildExampleTest "fatfs" packages.fatfs-example;
+          };
 
           # `nix develop`
           devShell = pkgs.mkShell {
