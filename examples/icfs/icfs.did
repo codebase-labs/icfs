@@ -3,4 +3,5 @@ service : {
   test_writer_vectored : () -> ();
   test_writer_seek : () -> ();
   test_reader : () -> ();
+  test_reader_vectored : () -> ();
 }

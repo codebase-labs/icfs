@@ -2,6 +2,7 @@
 // * https://users.rust-lang.org/t/existing-tests-for-read-write-and-seek-traits/72991/2
 // * https://github.com/rust-lang/rust/blob/a2ebd5a1f12f4242edf66cbbd471c421bec62753/library/std/src/io/cursor/tests.rs
 
+#![feature(io_slice_advance)]
 #![feature(write_all_vectored)]
 
 use ic_cdk_macros::{init, query, update};
@@ -141,5 +142,58 @@ fn test_reader() {
         assert_eq!(stable_memory.read(&mut buf).unwrap(), 4);
         let b: &[_] = &[0, 0, 0, 0];
         assert_eq!(buf, b);
+    })
+}
+
+// Based on https://github.com/rust-lang/rust/blob/a2af9cf1cf6ccb195eae40cdd793939bc77e7e73/library/std/src/io/mod.rs#L1578
+fn read_all_vectored(stable_memory: &mut icfs::StableMemory, mut bufs: &mut [IoSliceMut<'_>]) -> std::io::Result<()> {
+    // Guarantee that bufs is empty if it contains no data,
+    // to avoid calling write_vectored if there is no data to be written.
+    IoSliceMut::advance_slices(&mut bufs, 0);
+    while !bufs.is_empty() {
+        match stable_memory.read_vectored(bufs) {
+            Ok(0) => {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    "failed to read whole buffer",
+                ));
+            }
+            Ok(n) => IoSliceMut::advance_slices(&mut bufs, n),
+            Err(ref e) if e.kind() == std::io::ErrorKind::Interrupted => {}
+            Err(e) => return Err(e),
+        }
+    }
+    Ok(())
+}
+
+#[update]
+fn test_reader_vectored() {
+    setup();
+    STABLE_MEMORY.with(|stable_memory| {
+        let mut stable_memory = *stable_memory.borrow();
+        stable_memory.write(&[0, 1, 2, 3, 4, 5, 6, 7]).unwrap();
+        stable_memory.seek(SeekFrom::Start(0)).unwrap();
+
+        let mut buf = [];
+        read_all_vectored(&mut stable_memory, &mut [IoSliceMut::new(&mut buf)]).unwrap();
+        assert_eq!(stable_memory.stream_position().unwrap(), 0);
+
+        let mut buf = [0];
+        read_all_vectored(&mut stable_memory, &mut [IoSliceMut::new(&mut []), IoSliceMut::new(&mut buf),]).unwrap();
+        assert_eq!(stable_memory.stream_position().unwrap(), 1);
+
+        let b: &[_] = &[0];
+        assert_eq!(buf, b);
+
+        let mut buf1 = [0; 4];
+        let mut buf2 = [0; 4];
+        read_all_vectored(&mut stable_memory, &mut [IoSliceMut::new(&mut buf1), IoSliceMut::new(&mut buf2),]).unwrap();
+
+        let b1: &[_] = &[1, 2, 3, 4];
+        let b2: &[_] = &[5, 6, 7];
+        assert_eq!(buf1, b1);
+        assert_eq!(&buf2[..3], b2);
+
+        assert_eq!(stable_memory.read(&mut buf).unwrap(), 1);
     })
 }

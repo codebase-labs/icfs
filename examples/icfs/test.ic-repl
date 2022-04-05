@@ -15,3 +15,6 @@ assert result == null;
 
 let result = call icfs.test_reader();
 assert result == null;
+
+let result = call icfs.test_reader_vectored();
+assert result == null;
