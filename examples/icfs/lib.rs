@@ -30,6 +30,33 @@ fn test_writer() {
         assert_eq!(&icfs::StableMemory::bytes()[0..11], b);
 
         ic_cdk::api::stable::stable64_write(0, &vec![0; 11]);
+        stable_memory.seek(SeekFrom::Start(0)).unwrap();
+    })
+}
+
+#[update]
+fn test_writer_vectored() {
+    STABLE_MEMORY.with(|stable_memory| {
+        let mut stable_memory = *stable_memory.borrow();
+        assert_eq!(stable_memory.stream_position().unwrap(), 0);
+
+        stable_memory.write_all_vectored(&mut [IoSlice::new(&[0])]).unwrap();
+        assert_eq!(stable_memory.stream_position().unwrap(), 1);
+
+        stable_memory.write_all_vectored(&mut [IoSlice::new(&mut [1, 2, 3]), IoSlice::new(&mut [4, 5, 6, 7]),]).unwrap();
+        assert_eq!(stable_memory.stream_position().unwrap(), 8);
+
+        stable_memory.write_all_vectored(&mut []).unwrap();
+        assert_eq!(stable_memory.stream_position().unwrap(), 8);
+
+        stable_memory.write_all_vectored(&mut [IoSlice::new(&[8, 9])]).unwrap();
+        stable_memory.write_all_vectored(&mut [IoSlice::new(&[10])]).unwrap();
+
+        let b: &[_] = &[0, 1, 2, 3, 4, 5, 6, 7, 8];
+        assert_eq!(&icfs::StableMemory::bytes()[0..9], b);
+
+        ic_cdk::api::stable::stable64_write(0, &vec![0; 11]);
+        stable_memory.seek(SeekFrom::Start(0)).unwrap();
     })
 }
 
@@ -67,6 +94,7 @@ fn test_writer_seek() {
 
         ic_cdk::api::stable::stable64_write(0, &vec![0; 8]);
         ic_cdk::api::stable::stable64_write(capacity as u64 - 8, &vec![0; 8]);
+        stable_memory.seek(SeekFrom::Start(0)).unwrap();
     })
 }
 
@@ -107,5 +135,6 @@ fn test_reader() {
         assert_eq!(buf, b);
 
         ic_cdk::api::stable::stable64_write(0, &vec![0; 8]);
+        stable_memory.seek(SeekFrom::Start(0)).unwrap();
     })
 }

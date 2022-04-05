@@ -7,6 +7,9 @@ import icfs = "rrkah-fqaaa-aaaaa-aaaaq-cai" as "icfs.did";
 let result = call icfs.test_writer();
 assert result == null;
 
+let result = call icfs.test_writer_vectored();
+assert result == null;
+
 let result = call icfs.test_writer_seek();
 assert result == null;
 
