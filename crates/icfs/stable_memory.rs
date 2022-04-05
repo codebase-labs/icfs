@@ -5,7 +5,7 @@ use ic_cdk::api::stable::{
 };
 use std::io;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct StableMemory {
     offset: usize,
 }

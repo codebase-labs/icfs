@@ -407,6 +407,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "icfs-example"
+version = "0.1.0"
+dependencies = [
+ "ic-cdk 0.4.0",
+ "ic-cdk-macros",
+ "icfs",
+]
+
+[[package]]
 name = "icfs-fatfs"
 version = "0.1.0"
 dependencies = [

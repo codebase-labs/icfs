@@ -2,6 +2,12 @@
   "version": 1,
   "dfx": "0.8.4",
   "canisters": {
+    "icfs": {
+      "type": "custom",
+      "build": "nix build '.#icfs-example'",
+      "candid": "examples/icfs/icfs.did",
+      "wasm": "result/lib/icfs_example.wasm"
+    },
     "fatfs": {
       "type": "custom",
       "build": "nix build '.#fatfs-example'",
