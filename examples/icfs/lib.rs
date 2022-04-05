@@ -28,5 +28,7 @@ fn test_writer() {
             .unwrap();
         let b: &[_] = &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
         assert_eq!(&icfs::StableMemory::bytes()[0..11], b);
+
+        ic_cdk::api::stable::stable64_write(0, &vec![0; 11]);
     })
 }
