@@ -12,8 +12,23 @@ thread_local! {
         = std::cell::RefCell::new(icfs::StableMemory::default());
 }
 
+fn setup() {
+    STABLE_MEMORY.with(|stable_memory| {
+        let mut stable_memory = *stable_memory.borrow();
+        let capacity = icfs::StableMemory::capacity();
+        let b: &[_] = &vec![0; capacity];
+
+        ic_cdk::api::stable::stable64_write(0, &b);
+        assert_eq!(&icfs::StableMemory::bytes()[..], b);
+
+        stable_memory.seek(SeekFrom::Start(0)).unwrap();
+        assert_eq!(stable_memory.stream_position().unwrap(), 0);
+    })
+}
+
 #[update]
 fn test_writer() {
+    setup();
     STABLE_MEMORY.with(|stable_memory| {
         let mut stable_memory = *stable_memory.borrow();
         assert_eq!(stable_memory.write(&[0]).unwrap(), 1);
@@ -28,14 +43,12 @@ fn test_writer() {
             .unwrap();
         let b: &[_] = &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
         assert_eq!(&icfs::StableMemory::bytes()[0..11], b);
-
-        ic_cdk::api::stable::stable64_write(0, &vec![0; 11]);
-        stable_memory.seek(SeekFrom::Start(0)).unwrap();
     })
 }
 
 #[update]
 fn test_writer_vectored() {
+    setup();
     STABLE_MEMORY.with(|stable_memory| {
         let mut stable_memory = *stable_memory.borrow();
         assert_eq!(stable_memory.stream_position().unwrap(), 0);
@@ -54,14 +67,12 @@ fn test_writer_vectored() {
 
         let b: &[_] = &[0, 1, 2, 3, 4, 5, 6, 7, 8];
         assert_eq!(&icfs::StableMemory::bytes()[0..9], b);
-
-        ic_cdk::api::stable::stable64_write(0, &vec![0; 11]);
-        stable_memory.seek(SeekFrom::Start(0)).unwrap();
     })
 }
 
 #[update]
 fn test_writer_seek() {
+    setup();
     STABLE_MEMORY.with(|stable_memory| {
         let mut stable_memory = *stable_memory.borrow();
 
@@ -91,15 +102,12 @@ fn test_writer_seek() {
 
         let b: &[_] = &[0, 0, 0, 0, 0, 0, 0, 4];
         assert_eq!(&icfs::StableMemory::bytes()[(capacity - 8)..], b);
-
-        ic_cdk::api::stable::stable64_write(0, &vec![0; 8]);
-        ic_cdk::api::stable::stable64_write(capacity as u64 - 8, &vec![0; 8]);
-        stable_memory.seek(SeekFrom::Start(0)).unwrap();
     })
 }
 
 #[update]
 fn test_reader() {
+    setup();
     STABLE_MEMORY.with(|stable_memory| {
         let mut stable_memory = *stable_memory.borrow();
         stable_memory.write(&[0, 1, 2, 3, 4, 5, 6, 7]).unwrap();
@@ -133,8 +141,5 @@ fn test_reader() {
         assert_eq!(stable_memory.read(&mut buf).unwrap(), 4);
         let b: &[_] = &[0, 0, 0, 0];
         assert_eq!(buf, b);
-
-        ic_cdk::api::stable::stable64_write(0, &vec![0; 8]);
-        stable_memory.seek(SeekFrom::Start(0)).unwrap();
     })
 }
