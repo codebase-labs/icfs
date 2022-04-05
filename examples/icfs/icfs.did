@@ -1,3 +1,4 @@
 service : {
   test_writer : () -> ();
+  test_writer_seek : () -> ();
 }
