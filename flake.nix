@@ -42,7 +42,8 @@
           # channel = "1.56.0";
           # sha256 = "L1e0o7azRjOHd0zBa+xkFnxdFulPofTedSTEYZSjj2s=";
           channel = "nightly"; # for write_all_vectored
-          sha256 = "0eyEJlGQbev/oZUw5LbRcddkUvjyKSLEHdxWJiOOA/k=";
+          date = "2021-10-21"; # date of 1.56.0 release
+          sha256 = "KNIEZgJQBD31InRkeRX9SGh49qOkiwS5s+RXl28uA48=";
           # sha256 = pkgs.lib.fakeSha256;
         }).rust.override {
           extensions = [
