@@ -15,11 +15,11 @@ thread_local! {
 #[update]
 fn test_writer() {
     STABLE_MEMORY.with(|stable_memory| {
-        let mut writer = *stable_memory.borrow();
-        assert_eq!(writer.write(&[0]).unwrap(), 1);
-        assert_eq!(writer.write(&[1, 2, 3]).unwrap(), 3);
-        assert_eq!(writer.write(&[4, 5, 6, 7]).unwrap(), 4);
-        writer
+        let mut stable_memory = *stable_memory.borrow();
+        assert_eq!(stable_memory.write(&[0]).unwrap(), 1);
+        assert_eq!(stable_memory.write(&[1, 2, 3]).unwrap(), 3);
+        assert_eq!(stable_memory.write(&[4, 5, 6, 7]).unwrap(), 4);
+        stable_memory
             .write_all_vectored(&mut [
                 IoSlice::new(&[]),
                 IoSlice::new(&[8, 9]),
@@ -36,28 +36,28 @@ fn test_writer() {
 #[update]
 fn test_writer_seek() {
     STABLE_MEMORY.with(|stable_memory| {
-        let mut writer = *stable_memory.borrow();
+        let mut stable_memory = *stable_memory.borrow();
 
-        assert_eq!(writer.stream_position().unwrap(), 0);
-        assert_eq!(writer.write(&[1]).unwrap(), 1);
-        assert_eq!(writer.stream_position().unwrap(), 1);
+        assert_eq!(stable_memory.stream_position().unwrap(), 0);
+        assert_eq!(stable_memory.write(&[1]).unwrap(), 1);
+        assert_eq!(stable_memory.stream_position().unwrap(), 1);
 
-        assert_eq!(writer.seek(SeekFrom::Start(2)).unwrap(), 2);
-        assert_eq!(writer.stream_position().unwrap(), 2);
-        assert_eq!(writer.write(&[2]).unwrap(), 1);
-        assert_eq!(writer.stream_position().unwrap(), 3);
+        assert_eq!(stable_memory.seek(SeekFrom::Start(2)).unwrap(), 2);
+        assert_eq!(stable_memory.stream_position().unwrap(), 2);
+        assert_eq!(stable_memory.write(&[2]).unwrap(), 1);
+        assert_eq!(stable_memory.stream_position().unwrap(), 3);
 
-        assert_eq!(writer.seek(SeekFrom::Current(-2)).unwrap(), 1);
-        assert_eq!(writer.stream_position().unwrap(), 1);
-        assert_eq!(writer.write(&[3]).unwrap(), 1);
-        assert_eq!(writer.stream_position().unwrap(), 2);
+        assert_eq!(stable_memory.seek(SeekFrom::Current(-2)).unwrap(), 1);
+        assert_eq!(stable_memory.stream_position().unwrap(), 1);
+        assert_eq!(stable_memory.write(&[3]).unwrap(), 1);
+        assert_eq!(stable_memory.stream_position().unwrap(), 2);
 
         let capacity = icfs::StableMemory::capacity();
 
-        assert_eq!(writer.seek(SeekFrom::End(-1)).unwrap(), capacity as u64 - 1);
-        assert_eq!(writer.stream_position().unwrap(), capacity as u64 - 1);
-        assert_eq!(writer.write(&[4]).unwrap(), 1);
-        assert_eq!(writer.stream_position().unwrap(), capacity as u64);
+        assert_eq!(stable_memory.seek(SeekFrom::End(-1)).unwrap(), capacity as u64 - 1);
+        assert_eq!(stable_memory.stream_position().unwrap(), capacity as u64 - 1);
+        assert_eq!(stable_memory.write(&[4]).unwrap(), 1);
+        assert_eq!(stable_memory.stream_position().unwrap(), capacity as u64);
 
         let b: &[_] = &[1, 3, 2, 0, 0, 0, 0, 0];
         assert_eq!(&icfs::StableMemory::bytes()[0..8], b);
