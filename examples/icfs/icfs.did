@@ -6,4 +6,5 @@ service : {
   test_reader_vectored : () -> ();
   test_read_to_end : () -> ();
   test_read_exact : () -> ();
+  test_seek_past_end : () -> ();
 }

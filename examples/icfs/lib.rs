@@ -233,3 +233,16 @@ fn test_read_exact() {
         assert_eq!(buf, [1, 2, 3, 4, 5, 6, 7]);
     })
 }
+
+#[update]
+fn test_seek_past_end() {
+    setup();
+    STABLE_MEMORY.with(|stable_memory| {
+        let mut stable_memory = *stable_memory.borrow();
+        stable_memory.write(&[0xff]).unwrap();
+        let capacity = icfs::StableMemory::capacity();
+        let offset = capacity as u64 + 1;
+        assert_eq!(stable_memory.seek(SeekFrom::Start(offset)).unwrap(), offset);
+        assert_eq!(stable_memory.read(&mut [0]).unwrap(), 0);
+    })
+}
