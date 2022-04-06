@@ -197,3 +197,18 @@ fn test_reader_vectored() {
         assert_eq!(stable_memory.read(&mut buf).unwrap(), 1);
     })
 }
+
+#[update]
+fn test_read_to_end() {
+    setup();
+    STABLE_MEMORY.with(|stable_memory| {
+        let mut stable_memory = *stable_memory.borrow();
+        stable_memory.write(&[0, 1, 2, 3, 4, 5, 6, 7]).unwrap();
+        stable_memory.seek(SeekFrom::Start(0)).unwrap();
+
+        let mut v = Vec::new();
+        stable_memory.read_to_end(&mut v).unwrap();
+
+        assert_eq!(v, icfs::StableMemory::bytes());
+    })
+}
