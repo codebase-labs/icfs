@@ -21,3 +21,6 @@ assert result == null;
 
 let result = call icfs.test_read_to_end();
 assert result == null;
+
+let result = call icfs.test_read_exact();
+assert result == null;

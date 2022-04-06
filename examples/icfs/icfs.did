@@ -4,5 +4,6 @@ service : {
   test_writer_seek : () -> ();
   test_reader : () -> ();
   test_reader_vectored : () -> ();
-  test_read_to_end : () -> (); // test_read_exact : () -> ();
+  test_read_to_end : () -> ();
+  test_read_exact : () -> ();
 }

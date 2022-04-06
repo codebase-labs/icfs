@@ -212,3 +212,24 @@ fn test_read_to_end() {
         assert_eq!(v, icfs::StableMemory::bytes());
     })
 }
+
+#[update]
+fn test_read_exact() {
+    setup();
+    STABLE_MEMORY.with(|stable_memory| {
+        let mut stable_memory = *stable_memory.borrow();
+        stable_memory.write(&[0, 1, 2, 3, 4, 5, 6, 7]).unwrap();
+        stable_memory.seek(SeekFrom::Start(0)).unwrap();
+
+        let mut buf = [];
+        assert!(stable_memory.read_exact(&mut buf).is_ok());
+
+        let mut buf = [8];
+        assert!(stable_memory.read_exact(&mut buf).is_ok());
+        assert_eq!(buf[0], 0);
+
+        let mut buf = [0, 0, 0, 0, 0, 0, 0];
+        assert!(stable_memory.read_exact(&mut buf).is_ok());
+        assert_eq!(buf, [1, 2, 3, 4, 5, 6, 7]);
+    })
+}
