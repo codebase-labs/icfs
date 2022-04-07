@@ -135,8 +135,9 @@
           mv new.dfx.json dfx.json
 
           dfx start --background --host 127.0.0.1:0
-          dfx deploy ${name}
-          ic-repl --replica local examples/${name}/test.ic-repl
+          WEBSERVER_PORT=$(cat .dfx/webserver-port)
+          dfx deploy ${name} --network "http://127.0.0.1:$WEBSERVER_PORT"
+          ic-repl --replica "http://127.0.0.1:$WEBSERVER_PORT" examples/${name}/test.ic-repl
           dfx stop
 
           touch $out
