@@ -107,6 +107,20 @@ fn test_writer_seek() {
 }
 
 #[update]
+fn test_writer_error() {
+    setup();
+    STABLE_MEMORY.with(|stable_memory| {
+        let mut stable_memory = *stable_memory.borrow();
+        let capacity = icfs::StableMemory::capacity();
+        let offset = capacity as u64 - 2;
+        assert_eq!(stable_memory.seek(SeekFrom::End(-2)).unwrap(), offset);
+        assert_eq!(stable_memory.write(&[0]).unwrap(), 1);
+        assert_eq!(stable_memory.write(&[0, 0]).unwrap(), 1);
+        assert_eq!(stable_memory.write(&[0, 0]).unwrap(), 0);
+    })
+}
+
+#[update]
 fn test_reader() {
     setup();
     STABLE_MEMORY.with(|stable_memory| {
@@ -235,14 +249,38 @@ fn test_read_exact() {
 }
 
 #[update]
+fn test_reader_error() {
+    setup();
+    STABLE_MEMORY.with(|stable_memory| {
+        let mut stable_memory = *stable_memory.borrow();
+        let capacity = icfs::StableMemory::capacity();
+        let offset = capacity as u64 - 2;
+        assert_eq!(stable_memory.seek(SeekFrom::End(-2)).unwrap(), offset);
+
+        let mut buf = [0];
+        assert_eq!(stable_memory.read(&mut buf).unwrap(), 1);
+
+        let mut buf = [0, 0];
+        assert_eq!(stable_memory.read(&mut buf).unwrap(), 1);
+
+        let mut buf = [0, 0];
+        assert_eq!(stable_memory.read(&mut buf).unwrap(), 0);
+    })
+}
+
+#[update]
 fn test_seek_past_end() {
     setup();
     STABLE_MEMORY.with(|stable_memory| {
         let mut stable_memory = *stable_memory.borrow();
         let capacity = icfs::StableMemory::capacity();
         let offset = capacity as u64 + 1;
+
         assert_eq!(stable_memory.seek(SeekFrom::Start(offset)).unwrap(), offset);
-        assert_eq!(stable_memory.read(&mut [0]).unwrap(), 0);
+        assert!(stable_memory.read(&mut [0]).is_err());
+
+        assert_eq!(stable_memory.seek(SeekFrom::Start(offset)).unwrap(), offset);
+        assert!(stable_memory.write(&[3]).is_err());
     })
 }
 

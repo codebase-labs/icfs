@@ -1,7 +1,7 @@
 // Based on https://github.com/dfinity/cdk-rs/blob/a253119adb08929b6304d007ee0a6a37960656ed/src/ic-cdk/src/api/stable.rs
 // * Supports 64-bit addressed memory
 use ic_cdk::api::stable::{
-    stable64_grow, stable64_read, stable64_size, stable64_write, StableMemoryError,
+    stable64_read, stable64_write, StableMemoryError,
 };
 use std::io;
 
@@ -40,12 +40,12 @@ pub fn capacity() -> usize {
 
 /// Attempts to grow the memory by adding new pages.
 pub fn grow(added_pages: u64) -> Result<u64, StableMemoryError> {
-    stable64_grow(added_pages)
+    ic_cdk::api::stable::stable64_grow(added_pages)
 }
 
 /// Gets current size of the stable memory in WebAssembly pages.
 pub fn size() -> u64 {
-    stable64_size()
+    ic_cdk::api::stable::stable64_size()
 }
 
 /// Reads data from the stable memory location specified by an offset.
@@ -53,7 +53,7 @@ pub fn read(stable_memory: &mut StableMemory, buf: &mut [u8]) -> Result<usize, S
     let offset = get_offset(stable_memory);
     let capacity = capacity();
     let read_buf = if buf.len() + offset > capacity {
-        if offset < capacity {
+        if offset <= capacity {
             &mut buf[..capacity - offset]
         } else {
             return Err(StableMemoryError::OutOfBounds);
@@ -99,18 +99,27 @@ fn seek(stable_memory: &mut StableMemory, pos: io::SeekFrom) -> Result<u64, Stab
 /// error out is if it cannot grow the memory.
 pub fn write(stable_memory: &mut StableMemory, buf: &[u8]) -> Result<usize, StableMemoryError> {
     let offset = get_offset(stable_memory);
-    let new_offset = offset + buf.len();
-    let memory_end_bytes = (offset + buf.len()) as u64;
+    let memory_end_bytes = offset + buf.len();
     let memory_end_pages =
-        (memory_end_bytes + WASM_PAGE_SIZE_IN_BYTES - 1) / WASM_PAGE_SIZE_IN_BYTES;
-    let current_pages = capacity() as u64;
-    let additional_pages_required = memory_end_pages.saturating_sub(current_pages);
+        (memory_end_bytes as u64 + WASM_PAGE_SIZE_IN_BYTES - 1) / WASM_PAGE_SIZE_IN_BYTES;
+    let additional_pages_required = memory_end_pages.saturating_sub(capacity() as u64);
     if additional_pages_required > 0 {
-        stable64_grow(additional_pages_required)?;
+        grow(additional_pages_required)?;
     }
-    stable64_write(offset as u64, buf);
+    let capacity = capacity();
+    let write_buf = if memory_end_bytes > capacity {
+        if offset <= capacity {
+            &buf[..capacity - offset]
+        } else {
+            return Err(StableMemoryError::OutOfBounds);
+        }
+    } else {
+        buf
+    };
+    stable64_write(offset as u64, write_buf);
+    let new_offset = offset + write_buf.len();
     set_offset(stable_memory, new_offset);
-    Ok(buf.len())
+    Ok(write_buf.len())
 }
 
 impl StableMemory {
@@ -147,8 +156,11 @@ impl Default for StableMemory {
 
 impl std::io::Read for StableMemory {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        // read(self, buf).map_err(|e| io::Error::new(io::ErrorKind::Other, e))
-        read(self, buf).or(Ok(0)) // Read defines EOF to be success
+        read(self, buf).map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+    }
+
+    fn read_to_end(&mut self, buf: &mut Vec<u8>) -> std::io::Result<usize> {
+        crate::internal::default_read_to_end(self, buf).or(Ok(0)) // Read defines EOF to be success
     }
 }
 
