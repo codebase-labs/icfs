@@ -1,0 +1,29 @@
+import ext4 = "rrkah-fqaaa-aaaaa-aaaaq-cai" as "ext4.did";
+// import ext4 = "ai7t5-aibaq-aaaaa-aaaaa-c" as "ext4.did";
+
+let result = call ext4.ls();
+assert result == vec {};
+
+let result = call ext4.write_file("hello.txt", "Hello, World!");
+assert result == null;
+
+let result = call ext4.ls();
+assert result == vec { "hello.txt"; };
+
+let result = call ext4.read_file("hello.txt");
+assert result == "Hello, World!";
+
+let result = call ext4.write_file("hello.txt", "Hello!");
+assert result == null;
+
+let result = call ext4.read_file("hello.txt");
+assert result == "Hello!";
+
+let result = call ext4.write_file("goodbye.txt", "Goodbye!");
+assert result == null;
+
+let result = call ext4.ls();
+assert result == vec { "hello.txt"; "goodbye.txt"; };
+
+let result = call ext4.read_file("goodbye.txt");
+assert result == "Goodbye!";

@@ -8,6 +8,12 @@
       "candid": "examples/icfs/icfs.did",
       "wasm": "result/lib/icfs_example.wasm"
     },
+    "ext4": {
+      "type": "custom",
+      "build": "nix build '.#ext4-example'",
+      "candid": "examples/ext4/ext4.did",
+      "wasm": "result/lib/ext4_example.wasm"
+    },
     "fatfs": {
       "type": "custom",
       "build": "nix build '.#fatfs-example'",

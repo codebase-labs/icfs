@@ -4,8 +4,6 @@ version = "0.1.0"
 edition = "2018"
 authors = ["Paul Young <84700+paulyoung@users.noreply.github.com>"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [lib]
 path = "lib.rs"
 crate-type = ["cdylib", "lib"]
