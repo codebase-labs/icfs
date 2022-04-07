@@ -41,9 +41,9 @@
         rust = (mozilla.rustChannelOf {
           # channel = "1.56.0";
           # sha256 = "L1e0o7azRjOHd0zBa+xkFnxdFulPofTedSTEYZSjj2s=";
-          channel = "nightly"; # for write_all_vectored
-          date = "2021-10-21"; # date of 1.56.0 release
-          sha256 = "KNIEZgJQBD31InRkeRX9SGh49qOkiwS5s+RXl28uA48=";
+          channel = "nightly";
+          date = "2022-04-07"; # day of 1.60.0 release
+          sha256 = "z+elrzVPDgtdqSMg8NTSGqkmfsK6vOn9XUFXcsSXhXo=";
           # sha256 = pkgs.lib.fakeSha256;
         }).rust.override {
           extensions = [

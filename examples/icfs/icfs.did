@@ -2,10 +2,12 @@ service : {
   test_writer : () -> ();
   test_writer_vectored : () -> ();
   test_writer_seek : () -> ();
+  test_writer_error : () -> ();
   test_reader : () -> ();
   test_reader_vectored : () -> ();
   test_read_to_end : () -> ();
   test_read_exact : () -> ();
+  test_reader_error : () -> ();
   test_seek_past_end : () -> ();
   test_seek_before_0 : () -> ();
 }
