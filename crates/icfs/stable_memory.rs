@@ -5,7 +5,7 @@ use ic_cdk::api::stable::{
 };
 use std::io;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct StableMemory {
     offset: usize,
 }
@@ -140,8 +140,8 @@ impl Default for StableMemory {
 
 impl std::io::Read for StableMemory {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        // self.read(buf).or(Ok(0)) // Read defines EOF to be success
-        read(self, buf).map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+        // read(self, buf).map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+        read(self, buf).or(Ok(0)) // Read defines EOF to be success
     }
 }
 

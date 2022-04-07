@@ -39,8 +39,11 @@
         # Get a specific rust version
         mozilla = pkgs.callPackage (nixpkgs-mozilla + "/package-set.nix") {};
         rust = (mozilla.rustChannelOf {
-          channel = "1.56.0";
-          sha256 = "L1e0o7azRjOHd0zBa+xkFnxdFulPofTedSTEYZSjj2s=";
+          # channel = "1.56.0";
+          # sha256 = "L1e0o7azRjOHd0zBa+xkFnxdFulPofTedSTEYZSjj2s=";
+          channel = "nightly"; # for write_all_vectored
+          date = "2021-10-21"; # date of 1.56.0 release
+          sha256 = "KNIEZgJQBD31InRkeRX9SGh49qOkiwS5s+RXl28uA48=";
           # sha256 = pkgs.lib.fakeSha256;
         }).rust.override {
           extensions = [
@@ -120,6 +123,8 @@
             pkgs.jq
           ];
         } ''
+          trap "dfx stop" EXIT
+
           HOME=$TMP
           cp -R ${package}/. result
           mkdir -p examples/${name}
@@ -130,7 +135,7 @@
           mv new.dfx.json dfx.json
 
           dfx start --background
-          dfx deploy
+          dfx deploy ${name}
           ic-repl --replica local examples/${name}/test.ic-repl
           dfx stop
 
@@ -140,6 +145,8 @@
         packages = {
           icfs = buildLocalRustPackage "icfs";
           icfs-fatfs = buildLocalRustPackage "icfs-fatfs";
+
+          icfs-example = buildLocalRustPackage "icfs-example";
           fatfs-example = buildLocalRustPackage "fatfs-example";
         };
       in
@@ -152,6 +159,7 @@
           '';
 
           packages = packages // pkgs.lib.optionalAttrs pkgs.stdenv.isDarwin {
+            icfs-example-test = buildExampleTest "icfs" packages.icfs-example;
             fatfs-example-test = buildExampleTest "fatfs" packages.fatfs-example;
           };
 

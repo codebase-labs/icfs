@@ -1,0 +1,32 @@
+// Based on:
+// * https://users.rust-lang.org/t/existing-tests-for-read-write-and-seek-traits/72991/2
+// * https://github.com/rust-lang/rust/blob/a2ebd5a1f12f4242edf66cbbd471c421bec62753/library/std/src/io/cursor/tests.rs
+
+import icfs = "rrkah-fqaaa-aaaaa-aaaaq-cai" as "icfs.did";
+
+let result = call icfs.test_writer();
+assert result == null;
+
+let result = call icfs.test_writer_vectored();
+assert result == null;
+
+let result = call icfs.test_writer_seek();
+assert result == null;
+
+let result = call icfs.test_reader();
+assert result == null;
+
+let result = call icfs.test_reader_vectored();
+assert result == null;
+
+let result = call icfs.test_read_to_end();
+assert result == null;
+
+let result = call icfs.test_read_exact();
+assert result == null;
+
+let result = call icfs.test_seek_past_end();
+assert result == null;
+
+let result = call icfs.test_seek_before_0();
+assert result == null;
