@@ -134,7 +134,7 @@
           jq '.canisters = (.canisters | map_values(.build = "echo"))' dfx.json > new.dfx.json
           mv new.dfx.json dfx.json
 
-          dfx start --background
+          dfx start --background --host 127.0.0.1:0
           dfx deploy ${name}
           ic-repl --replica local examples/${name}/test.ic-repl
           dfx stop
