@@ -5,6 +5,8 @@ use ic_cdk::api::stable::{
 };
 use std::io;
 
+const WASM_PAGE_SIZE_IN_BYTES: u64 = 64 * 1024; // 64KB
+
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct StableMemory {
     offset: usize,
@@ -98,8 +100,13 @@ fn seek(stable_memory: &mut StableMemory, pos: io::SeekFrom) -> Result<u64, Stab
 pub fn write(stable_memory: &mut StableMemory, buf: &[u8]) -> Result<usize, StableMemoryError> {
     let offset = get_offset(stable_memory);
     let new_offset = offset + buf.len();
-    if new_offset > capacity() {
-        grow((buf.len() >> 16) as u64 + 1)?;
+    let memory_end_bytes = (offset + buf.len()) as u64;
+    let memory_end_pages =
+        (memory_end_bytes + WASM_PAGE_SIZE_IN_BYTES - 1) / WASM_PAGE_SIZE_IN_BYTES;
+    let current_pages = capacity() as u64;
+    let additional_pages_required = memory_end_pages.saturating_sub(current_pages);
+    if additional_pages_required > 0 {
+        stable64_grow(additional_pages_required)?;
     }
     stable64_write(offset as u64, buf);
     set_offset(stable_memory, new_offset);
