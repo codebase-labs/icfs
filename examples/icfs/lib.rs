@@ -239,10 +239,24 @@ fn test_seek_past_end() {
     setup();
     STABLE_MEMORY.with(|stable_memory| {
         let mut stable_memory = *stable_memory.borrow();
-        stable_memory.write(&[0xff]).unwrap();
         let capacity = icfs::StableMemory::capacity();
         let offset = capacity as u64 + 1;
         assert_eq!(stable_memory.seek(SeekFrom::Start(offset)).unwrap(), offset);
         assert_eq!(stable_memory.read(&mut [0]).unwrap(), 0);
+    })
+}
+
+#[update]
+fn test_seek_before_0() {
+    setup();
+    STABLE_MEMORY.with(|stable_memory| {
+        let mut stable_memory = *stable_memory.borrow();
+        stable_memory.seek(SeekFrom::Start(0)).unwrap();
+        assert!(stable_memory.seek(SeekFrom::Current(-1)).is_err());
+
+        stable_memory.seek(SeekFrom::Start(0)).unwrap();
+        let capacity = icfs::StableMemory::capacity();
+        let offset = 0 - capacity as i64 - 1;
+        assert!(stable_memory.seek(SeekFrom::End(offset)).is_err());
     })
 }

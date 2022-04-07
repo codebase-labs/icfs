@@ -27,3 +27,6 @@ assert result == null;
 
 let result = call icfs.test_seek_past_end();
 assert result == null;
+
+let result = call icfs.test_seek_before_0();
+assert result == null;
