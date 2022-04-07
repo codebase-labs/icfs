@@ -134,15 +134,16 @@
           jq '.canisters = (.canisters | map_values(.build = "echo"))' dfx.json > new.dfx.json
           mv new.dfx.json dfx.json
 
-          dfx start --background
-          dfx deploy ${name}
-          ic-repl --replica local examples/${name}/test.ic-repl
+          dfx start --background --host 127.0.0.1:0
+          WEBSERVER_PORT=$(cat .dfx/webserver-port)
+          dfx deploy ${name} --network "http://127.0.0.1:$WEBSERVER_PORT"
+          ic-repl --replica "http://127.0.0.1:$WEBSERVER_PORT" examples/${name}/test.ic-repl
           dfx stop
 
           touch $out
         '';
 
-        packages = {
+        darwinPackages = {
           icfs = buildLocalRustPackage "icfs";
           icfs-fatfs = buildLocalRustPackage "icfs-fatfs";
 
@@ -150,7 +151,7 @@
           fatfs-example = buildLocalRustPackage "fatfs-example";
         };
       in
-        {
+        rec {
           # `nix build`
           defaultPackage = pkgs.runCommand "all" {
             buildInputs = pkgs.lib.attrValues packages;
@@ -158,7 +159,7 @@
             touch $out
           '';
 
-          packages = packages // pkgs.lib.optionalAttrs pkgs.stdenv.isDarwin {
+          packages = darwinPackages // pkgs.lib.optionalAttrs pkgs.stdenv.isDarwin {
             icfs-example-test = buildExampleTest "icfs" packages.icfs-example;
             fatfs-example-test = buildExampleTest "fatfs" packages.fatfs-example;
           };
