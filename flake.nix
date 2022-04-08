@@ -143,7 +143,7 @@
           touch $out
         '';
 
-        darwinPackages = {
+        crossPlatformPackages = {
           icfs = buildLocalRustPackage "icfs";
           icfs-fatfs = buildLocalRustPackage "icfs-fatfs";
 
@@ -159,7 +159,7 @@
             touch $out
           '';
 
-          packages = darwinPackages // pkgs.lib.optionalAttrs pkgs.stdenv.isDarwin {
+          packages = crossPlatformPackages // pkgs.lib.optionalAttrs pkgs.stdenv.isDarwin {
             icfs-example-test = buildExampleTest "icfs" packages.icfs-example;
             fatfs-example-test = buildExampleTest "fatfs" packages.fatfs-example;
           };
