@@ -58,10 +58,6 @@ thread_local! {
 
 #[query]
 fn ls() -> Vec<String> {
-    _ls().unwrap()
-}
-
-fn _ls() -> std::io::Result<Vec<String>> {
     FS.with(|fs| {
         let fs = fs.borrow();
         let root_dir = fs.root_dir();
@@ -75,14 +71,11 @@ fn _ls() -> std::io::Result<Vec<String>> {
             .collect();
         entries
     })
+    .unwrap()
 }
 
 #[query]
 fn read_file(filename: String) -> String {
-    _read_file(filename).unwrap()
-}
-
-fn _read_file(filename: String) -> std::io::Result<String> {
     FS.with(|fs| {
         let fs = fs.borrow();
         let root_dir = fs.root_dir();
@@ -91,16 +84,13 @@ fn _read_file(filename: String) -> std::io::Result<String> {
         file.read_to_end(&mut buf)?;
         let contents = String::from_utf8(buf)
             .map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error))?;
-        Ok(contents)
+        std::io::Result::Ok(contents)
     })
+    .unwrap()
 }
 
 #[update]
 fn write_file(filename: String, contents: String) {
-    _write_file(filename, contents).unwrap();
-}
-
-fn _write_file(filename: String, contents: String) -> std::io::Result<()> {
     FS.with(|fs| {
         let fs = fs.borrow();
         let root_dir = fs.root_dir();
@@ -108,6 +98,7 @@ fn _write_file(filename: String, contents: String) -> std::io::Result<()> {
         file.truncate()?;
         file.write_all(&contents.into_bytes())?;
         file.flush()?;
-        Ok(())
+        std::io::Result::Ok(())
     })
+    .unwrap()
 }
