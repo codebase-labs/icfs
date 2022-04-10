@@ -1,29 +1,70 @@
 import fatfs = "rrkah-fqaaa-aaaaa-aaaaq-cai" as "fatfs.did";
-// import fatfs = "ai7t5-aibaq-aaaaa-aaaaa-c" as "fatfs.did";
 
-let result = call fatfs.ls();
+let result = call fatfs.ls(".");
 assert result == vec {};
 
-let result = call fatfs.write_file("hello.txt", "Hello, World!");
+let result = call fatfs.write_file("./hello.txt", "Hello, World!");
 assert result == null;
 
-let result = call fatfs.ls();
+let result = call fatfs.ls(".");
 assert result == vec { "hello.txt"; };
 
-let result = call fatfs.read_file("hello.txt");
+let result = call fatfs.cat("./hello.txt");
 assert result == "Hello, World!";
 
-let result = call fatfs.write_file("hello.txt", "Hello!");
+let result = call fatfs.write_file("./hello.txt", "Hello!");
 assert result == null;
 
-let result = call fatfs.read_file("hello.txt");
+let result = call fatfs.cat("./hello.txt");
 assert result == "Hello!";
 
-let result = call fatfs.write_file("goodbye.txt", "Goodbye!");
+let result = call fatfs.write_file("./goodbye.txt", "Goodbye!");
 assert result == null;
 
-let result = call fatfs.ls();
-assert result == vec { "hello.txt"; "goodbye.txt"; };
+let result = call fatfs.ls(".");
+assert result == vec { "goodbye.txt"; "hello.txt" };
 
-let result = call fatfs.read_file("goodbye.txt");
+let result = call fatfs.cat("./goodbye.txt");
 assert result == "Goodbye!";
+
+let result = call fatfs.mkdir("./foo");
+assert result == null;
+
+let result = call fatfs.ls(".");
+assert result == vec { "foo"; "goodbye.txt"; "hello.txt" };
+
+let result = call fatfs.ls("./foo");
+assert result == vec { "."; ".." };
+
+let result = call fatfs.mkdir("./foo/baz");
+assert result == null;
+
+let result = call fatfs.ls("./foo");
+assert result == vec { "."; ".."; "baz" };
+
+let result = call fatfs.write_file("./foo/bar.txt", "bar");
+assert result == null;
+
+let result = call fatfs.cat("./foo/bar.txt");
+assert result == "bar";
+
+let result = call fatfs.ls("./foo");
+assert result == vec { "."; ".."; "bar.txt"; "baz" };
+
+let result = call fatfs.rm("./foo/baz");
+assert result == null;
+
+let result = call fatfs.ls("./foo");
+assert result == vec { "."; ".."; "bar.txt" };
+
+let result = call fatfs.rm("./foo/bar.txt");
+assert result == null;
+
+let result = call fatfs.ls("./foo");
+assert result == vec { "."; ".." };
+
+let result = call fatfs.rm("./foo");
+assert result == null;
+
+let result = call fatfs.ls(".");
+assert result == vec { "goodbye.txt"; "hello.txt" };
