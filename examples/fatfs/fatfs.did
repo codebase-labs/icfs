@@ -1,5 +1,7 @@
 service : {
-  ls : () -> (vec text) query;
-  write_file : (filename : text, contents : text) -> ();
-  read_file : (filename : text) -> (text) query;
+  cat : (path : text) -> (text) query;
+  ls : (path : text) -> (vec text) query;
+  mkdir : (path : text) -> ();
+  rm : (path : text) -> ();
+  write_file : (path : text, contents : text) -> ();
 }
