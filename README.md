@@ -7,7 +7,7 @@ Internet Computer File System
 ## Crates
 
 * `icfs` provides implementations of `std::io::{Read, Write, Seek}` backed by stable memory to enable the use of existing Rust code that requires implementations of these traits.
-* `icfs-fatfs` uses `icfs` to leverage the `fatfs` crate in providing a FAT file system.
+* `icfs-fatfs` uses `icfs` to leverage the `fatfs` crate in providing a FAT file system. All this currently does is implement a `fatfs::TimeProvider` backed by `ic_cdk::api::time()`
 
 ## Develop
 
