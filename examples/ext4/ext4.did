@@ -1,0 +1,5 @@
+service : {
+  ls : () -> (vec text) query;
+  write_file : (filename : text, contents : text) -> ();
+  read_file : (filename : text) -> (text) query;
+}

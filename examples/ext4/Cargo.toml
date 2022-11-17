@@ -1,5 +1,5 @@
 [package]
-name = "icfs-fatfs"
+name = "ext4-example"
 version = "0.1.0"
 edition = "2018"
 authors = ["Paul Young <84700+paulyoung@users.noreply.github.com>"]
@@ -9,6 +9,8 @@ path = "lib.rs"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-fatfs = { git = "https://github.com/rafalh/rust-fatfs", rev = "87fc1ed5074a32b4e0344fcdde77359ef9e75432" }
+ext4 = { git = "https://github.com/FauxFaux/ext4-rs", rev = "1858f9d11ba3454f5a274275e059f631fb7a3b01" }
 ic-cdk = { git = "https://github.com/dfinity/cdk-rs.git", rev = "a253119adb08929b6304d007ee0a6a37960656ed" }
-time = "0.3"
+ic-cdk-macros = "0.3"
+icfs = { path = "../../crates/icfs" }
+icfs-ext4 = { path = "../../crates/icfs-ext4" }

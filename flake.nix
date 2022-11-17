@@ -145,9 +145,11 @@
 
         crossPlatformPackages = {
           icfs = buildLocalRustPackage "icfs";
+          icfs-ext4 = buildLocalRustPackage "icfs-ext4";
           icfs-fatfs = buildLocalRustPackage "icfs-fatfs";
 
           icfs-example = buildLocalRustPackage "icfs-example";
+          ext4-example = buildLocalRustPackage "ext4-example";
           fatfs-example = buildLocalRustPackage "fatfs-example";
         };
       in
@@ -161,6 +163,7 @@
 
           packages = crossPlatformPackages // pkgs.lib.optionalAttrs pkgs.stdenv.isDarwin {
             icfs-example-test = buildExampleTest "icfs" packages.icfs-example;
+            ext4-example-test = buildExampleTest "ext4" packages.ext4-example;
             fatfs-example-test = buildExampleTest "fatfs" packages.fatfs-example;
           };
 
